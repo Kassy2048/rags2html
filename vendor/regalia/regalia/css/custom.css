@@ -1,0 +1,550 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+/* main page layout */
+
+body {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    overflow-y: hidden;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: 0;
+}
+
+#menu {
+    top: 0;
+    height: 30px;
+    display: inline-block;
+    flex: 0 0 auto;
+}
+
+.mainrow {
+    position: static;
+    flex: 1 1 auto;
+    display: flex;
+}
+
+#PlayerRow {
+    display: flex;
+    height: 30%;
+    flex: 0 0 auto;
+}
+
+.big-picture-mode #PlayerRow {
+    height: 10%;
+}
+
+#statusbar {
+    height: 30px;
+    flex: 0 0 auto;
+    padding: 10px;
+    position: static;
+    display: flex;
+    align-items: center;
+}
+
+/* mainrow */
+
+#roompanel {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    position: static;
+    width: 40%;
+}
+
+#MainText {
+    padding: 0 6px 10px 6px;
+    height: 270px;
+    flex: 1 1 auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#MainText hr {
+    border: none;
+    border-top: 1px dashed grey;
+}
+
+#MainText hr:last-child {
+    display: none;
+}
+
+#RoomBar {
+    display: flex;
+    align-items: center;
+    border: 0;
+    border-top: 1px solid grey;
+}
+
+#Continue {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+/* menu row */
+
+#menu {
+    display: flex;
+    align-items: center;
+}
+
+.menuitem {
+    padding: 0 20px;
+    flex: 1 1 auto;
+}
+
+/* playerrow */
+
+.compass-and-portrait {
+    width: 40%;
+    display: flex;
+}
+
+.compass-and-portrait > * {
+    border-right: 1px solid grey;
+}
+
+.compass-up-down, .compass-rose {
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compass-up-down {
+    flex: 0 0 10%;
+}
+
+.compass-rose {
+    flex: 0 0 50%;
+}
+
+.portrait-holder {
+    position: relative;
+    overflow: hidden;
+    flex: 1 1 auto;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compass-direction-rows {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.compass-direction-row {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 auto;
+    height: 33%;
+}
+
+.compass-direction-row > div {
+    flex: 1 1 auto;
+    margin: 2px;
+    width: 33%;
+}
+
+/* other stuff */
+
+#RoomThumb, #RoomThumbImg {
+    border: 2px solid transparent;
+}
+
+#RoomThumbImg {
+    margin: 0;
+}
+
+#RoomThumbHolder {
+    position: relative;
+    height: 60px;
+    width: 60px;
+    flex-shrink: 0;
+}
+
+#RoomTitle {
+    width: auto;
+    flex: 1 1 auto;
+    padding-left: 10px;
+    text-align: left;
+    align-items: center;
+    margin: 0;
+    display: flex;
+    border: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#RoomThumbImg.has-actions, #PlayerImg.has-actions {
+    border: 2px solid green;
+    cursor: pointer;
+}
+
+#RoomThumbImg, .RoomLayeredImage,
+#PlayerImg, .PortraitLayeredImage,
+#MainImg, .MainLayeredImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+#MainVideo {
+    width: 100%;
+}
+
+#RoomThumbImg, .RoomLayeredImage,
+#PlayerImg, .PortraitLayeredImage,
+#MainImg, .MainLayeredImage,
+.compass-rose, .compass-up-down {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#MainImg, .MainLayeredImage {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+#RoomThumbImg, .RoomLayeredImage,
+#PlayerImg, .PortraitLayeredImage {
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    right: 2px;
+}
+
+#inputmenu, #cmdinputmenu, #playernamechoice, #genderchoice, #textchoice, #textactionchoice {
+    position: absolute;
+    background-color: white;
+    border: 1px solid grey;
+    visibility: hidden;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.8;
+    text-align: left;
+}
+
+#inputmenu:not(.cancellable) #CancelInput {
+    display: none;
+}
+
+#cmdinputmenu:not(.cancellable) #cmdCancelInput {
+    display: none;
+}
+
+#cmdinputmenu {
+    /* Show scrollbars if needed */
+    max-height: 100%;
+    max-width: 100%;
+}
+
+#playernamechoice, #textchoice, #textactionchoice {
+    padding: 10px;
+}
+
+#playernamechoice input, #textchoice input, #textactionchoice input {
+    margin: 10px 0;
+    font-size: 24px;
+}
+
+.picpanel {
+    width: 60%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.inputmenuholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+#inputchoices, #cmdinputchoices {
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+}
+
+#InputMenuTitle, #cmdInputMenuTitle {
+    font-weight: bold;
+    font-size: 18px;
+    padding: 10px;
+}
+
+#inputchoices .inputchoices, #cmdinputchoices .inputchoices {
+    cursor: pointer;
+    padding: 5px 10px;
+    margin: 3px;
+}
+
+#inputchoices .inputchoices:empty, #cmdinputchoices .inputchoices:empty {
+    padding: 0;
+    margin: 0;
+}
+
+#inputchoices .inputchoices:hover, #cmdinputchoices .inputchoices:hover {
+    background-color: #b5b5b5;
+    color: black;
+}
+
+#CancelInput, #cmdCancelInput {
+    margin: 10px;
+    width: 100px;
+}
+
+#RoomObjects .RoomObjects:not(.no-actions):hover,
+#Inventory .RoomObjects:not(.no-actions):hover,
+#VisibleCharacters .VisibleCharacters:not(.no-actions):hover,
+#Actionchoices .ActionChoices:not(.no-actions):hover
+{
+    cursor: pointer;
+    background-color: #b5b5b5;
+}
+
+.RoomObjects, .VisibleCharacters {
+    padding: 2px;
+}
+
+.no-actions {
+    font-style: italic;
+    color: grey;
+}
+
+#RoomObjectsPanel, #VisibleCharactersPanel, #InventoryPanel {
+    border: 0;
+    flex: 1 1 auto;
+}
+
+#PlayerImg,
+#RoomThumbImg,
+#RoomObjects,
+#VisibleCharacters,
+#Inventory,
+#selectionmenu,
+#PlayerRow,
+#cmdinputmenu,
+#tooltip
+{
+    border: 1px solid grey;
+}
+
+#menu {
+    border-bottom: 1px solid grey;
+}
+
+#roompanel {
+    border-right: 1px solid grey;
+}
+
+#MainImg {
+    border-left: none;
+}
+
+.compass-center {
+    position: relative;
+}
+
+#bIn, #bOut
+{
+    position: absolute;
+    z-index: 1;
+    opacity:0.7;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 50%;
+    display: none;
+}
+
+#bIn.active, #bOut.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#bIn {
+    top: 0;
+}
+
+#bOut
+{
+    bottom: 0;
+}
+
+.big-picture-mode .compass-direction {
+    /* When UI is shrunk */
+    font-size: small;
+}
+
+.compass-direction {
+    visibility: hidden;
+    overflow: hidden;
+}
+
+.compass-direction.active {
+    cursor: pointer;
+    visibility: visible;
+    /* opacity: 0.5; */
+    /* background-color: green; */
+    border: 1px solid black;
+    font-weight: bold;
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    flex-direction: column;
+    /* Only make the background transparent, not the text */
+    background-color: rgba(0, 128, 0, 0.6);
+}
+
+.compass-direction.active:hover {
+    opacity: 0.75;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.cheat-menu-content, .import-menu-content, .export-menu-content {
+    font-family: sans-serif;
+    padding: 15px;
+    position: fixed;
+    border: 1px solid grey;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.cheat-menu-content {
+    top: 15%;
+    right: 20%;
+    left: 20%;
+    bottom: 15%;
+}
+
+.import-menu-content, .export-menu-content {
+    top: 35%;
+    right: 35%;
+    left: 35%;
+    text-align: center;
+}
+
+.export-menu-content a {
+    font-size: 32px;
+}
+
+.import-menu-content input {
+    margin: 20px 0;
+}
+
+.cheat-menu-title, .cheat-menu-subtitle {
+    flex: 0 0 auto;
+}
+
+.cheat-menu-scrollable {
+    flex: 1 1 auto;
+}
+
+.cheat-menu-scrollable th, .cheat-menu-scrollable td {
+    text-align: left;
+    vertical-align: top;
+}
+
+.cheat-menu-scrollable td {
+    padding: 5px 2px;
+}
+
+.cheat-menu-variables-body .desc-cell {
+    max-width: 200px;
+    font-size: 13px;
+}
+
+.cheat-menu-actions {
+    flex: 0 0 auto;
+    text-align: right;
+}
+
+.cheat-menu-content h1 {
+    margin: 0;
+}
+
+.freeze-button.frozen {
+    background-color: #00e7ff;
+}
+
+.live-timer-display {
+    background-color: white;
+    z-index: 1;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    border-top: 2px solid black;
+    border-left: 2px solid black;
+}
+
+.live-timer-display table {
+    border-collapse: collapse;
+}
+
+.live-timer-display h4 {
+    margin: 0;
+    background: #ccc;
+    border-bottom: 2px solid black;
+    padding: 3px;
+}
+
+.live-timer-display-rows td {
+    padding: 3px;
+}
+
+.live-timer-display-rows tr:hover td {
+    background-color: #b5b5b5;
+    border-color: #b5b5b5;
+    cursor: pointer;
+}
+
+.live-timer-display-rows tr:not:last-child td {
+    border-bottom: 1px solid grey;
+}

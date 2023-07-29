@@ -1,0 +1,232 @@
+﻿body {
+    background-color: white;
+    color: black;
+    min-width: 750px;
+    min-height: 500px;
+}
+
+div {
+    overflow: auto;
+}
+
+article {
+    width: 50%;
+}
+
+p {
+    font-size: larger;
+    border-style: solid;
+    border-color: Black;
+    border-width: thick;
+    width: 50%;
+}
+
+#Continue {
+    float: right;
+    margin-top: 20px;
+    margin-right: 4px;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: Gray;
+    visibility: hidden;
+}
+
+#RoomTitle {
+    display: inline-block;
+    width: 40%;
+    text-align: center;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: large;
+    border: 1px solid green;
+    vertical-align: top;
+    margin-top: 20px;
+    margin-left: 7px;
+}
+
+table {
+    width: 100%;
+    height: 100%
+}
+
+#textbutton {
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+}
+
+#textactionbutton {
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+}
+
+#playernamebutton {
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+}
+
+#playernametext {
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+}
+
+#genderchoiceSelect {
+    width: auto;
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+}
+
+#playernametext {
+    width: 100%;
+}
+
+.save-menu-content, .load-menu-content {
+    position: absolute;
+    background-color: White;
+    max-height: 300px;
+    border: 1px solid grey;
+    display: flex;
+    flex-direction: column;
+}
+
+.save-menu-content h3, .load-menu-content h3 {
+    margin: 0 0 4px 0;
+}
+
+.save-menu-content  > * {
+    flex: 0 0 auto;
+}
+
+.save-menu-content .savegames-table {
+    flex: 1 1 auto;
+}
+
+.savegames-header {
+    padding: 8px;
+    flex: 0 0 auto;
+}
+
+.btn {
+    border: 1px solid grey;
+    background: lightgrey;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn:hover {
+    background: #aaa;
+}
+
+.btn.btn-danger {
+    background: #ffb4b4;
+}
+
+.btn.btn-danger:hover {
+    background: #d47979;
+}
+
+.savegames-header button {
+    margin-top: 4px;
+}
+
+.savegames-table {
+    height: auto;
+}
+
+.savegames-table.btn {
+    height: 100%;
+    width: 100%;
+}
+
+.savegames-table th, .savegames-table td {
+    text-align: left;
+}
+
+.savegames-table td {
+    vertical-align: middle;
+    border: 1px solid grey;
+}
+
+.savegames-table .name-column {
+    width: 220px;
+}
+
+td {
+    text-align: center;
+}
+
+#selectionmenu {
+    z-index: 100;
+    position: absolute;
+    background-color: White;
+    min-width: 200px;
+    max-width: 300px;
+    max-height: 300px;
+    overflow: auto;
+    top: 50px;
+    visibility: hidden;
+    filter: alpha(opacity=60);
+}
+
+#Actionchoices {
+    width: 100%;
+    height: 100%;
+}
+
+#RoomObjectsPanel {
+    display: inline-block;
+    vertical-align: top;
+    width: 16%;
+    margin: 2px;
+}
+
+#RoomObjects {
+    width: 97%;
+    margin: 2px;
+    height: 87%;
+}
+
+#VisibleCharactersPanel {
+    display: inline-block;
+    vertical-align: top;
+    width: 15%;
+    margin: 2px;
+}
+
+#VisibleCharacters {
+    width: 97%;
+    margin: 2px;
+    height: 87%;
+}
+
+#InventoryPanel {
+    display: inline-block;
+    vertical-align: top;
+    width: 16%;
+    margin: 2px;
+}
+
+#Inventory {
+    width: 97%;
+    margin: 2px;
+    height: 87%;
+}
+
+#Version {
+    float: right;
+    display: inline;
+    margin-right: 20px;
+    position: absolute;
+    text-align: center;
+    vertical-align: middle;
+    margin-left: 20px;
+}
+
+#tooltip {
+    z-index: 100;
+    font-weight: bold;
+    position: absolute;
+    width: auto;
+    height: 25px;
+    background-color: white;
+    visibility: hidden;
+}

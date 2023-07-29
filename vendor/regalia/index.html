@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title></title>
+    <meta name="description" content=""/>
+    <meta name="keywords" content=""/>
+    <meta name="author" content=""/>
+
+    <link rel="icon" href="regalia/Rags_32512.ico" type="image/x-icon" />
+
+    <!-- !CSS -->
+    <link href="regalia/css/style.css" rel="stylesheet" />
+    <link href="regalia/css/custom.css" rel="stylesheet" />
+    <script src="regalia/vendor/modernizr-2.0.6.js"></script>
+    <script src="regalia/vendor/jquery-1.7.1.min.js"></script>
+    <script src="regalia/vendor/deep-diff-0.3.8.min.js"></script>
+    <script src="regalia/vendor/react.production.min.js"></script>
+    <script src="regalia/vendor/react-dom.production.min.js"></script>
+    <script src="regalia/vendor/moment.min.js"></script>
+    <script src="regalia/js/polyfills.js"></script>
+    <script src="regalia/game/Game.js"></script>
+    <script src="regalia/js/DateTimes.js"></script>
+    <script src="regalia/js/Constants.js"></script>
+    <script src="regalia/js/models/Room.js"></script>
+    <script src="regalia/js/models/Player.js"></script>
+    <script src="regalia/js/models/Action.js"></script>
+    <script src="regalia/js/models/Command.js"></script>
+    <script src="regalia/js/models/EnhancedInputData.js"></script>
+    <script src="regalia/js/models/Condition.js"></script>
+    <script src="regalia/js/models/Check.js"></script>
+    <script src="regalia/js/models/Characters.js"></script>
+    <script src="regalia/js/models/CustomProperty.js"></script>
+    <script src="regalia/js/models/Object.js"></script>
+    <script src="regalia/js/models/RagsImage.js"></script>
+    <script src="regalia/js/models/Exit.js"></script>
+    <script src="regalia/js/models/Timer.js"></script>
+    <script src="regalia/js/models/Variable.js"></script>
+    <script src="regalia/js/models/StatusBarItem.js"></script>
+    <script src="regalia/js/Globals.js"></script>
+    <script src="regalia/js/SaveAndLoad.js"></script>
+    <script src="regalia/js/testing.js"></script>
+    <script src="regalia/js/Logging.js"></script>
+    <script src="regalia/js/CommandLists.js"></script>
+    <script src="regalia/js/Finder.js"></script>
+    <script src="regalia/js/GameController.js"></script>
+    <script src="regalia/js/GameTimers.js"></script>
+    <script src="regalia/js/GameUI.js"></script>
+    <script src="regalia/js/GameActions.js"></script>
+    <script src="regalia/js/GameConditions.js"></script>
+    <script src="regalia/js/GameCommands.js"></script>
+    <script src="regalia/js/Utilities.js"></script>
+    <script src="regalia/js/TextHandler.js"></script>
+    <script src="regalia/js/Cheat.js"></script>
+    <script src="regalia/js/components/CheatMenuComponents.js"></script>
+</head>
+
+<body>
+<header id="menu">
+    <div class="menuitem">
+        <b class="game-title"></b>
+    </div>
+    <div class="menuitem">
+        <button id="load">Load</button>
+    </div>
+    <div class="menuitem">
+        <button id="save">Save</button>
+    </div>
+    <div class="menuitem">
+        <button id="cheat_button">Cheat</button>
+    </div>
+    <div class="menuitem">
+        <button id="shrink_ui">Shrink UI</button>
+        <button id="unshrink_ui" style="display: none;">Unshrink UI</button>
+    </div>
+    <div class="menuitem">
+        <b id="regalia_version"></b>
+    </div>
+</header>
+
+<div class="mainrow">
+    <div id="roompanel">
+        <div id="MainText"></div>
+        <div id="RoomBar">
+            <div id="RoomThumbHolder">
+                <div id="RoomThumbImg"></div>
+                <div id="RoomImageLayers"></div>
+            </div>
+            <div id="RoomTitle">Test Title</div>
+            <button id="Continue">Continue...</button>
+        </div>
+    </div>
+
+    <div class="picpanel">
+        <div id="MainImg"></div>
+        <div id="MainImageLayers"></div>
+
+        <div id="MainVideo"></div>
+
+        <div class="inputmenuholder">
+            <div id="inputmenu">
+                <div id="InputMenuTitle">Test</div>
+                <div id="inputchoices"></div>
+                <button id="CancelInput">Cancel</button>
+            </div>
+
+            <div id="cmdinputmenu">
+                <div id="cmdInputMenuTitle">Test</div>
+                <div id="cmdinputchoices"></div>
+                <button id="cmdCancelInput">Cancel</button>
+            </div>
+
+            <div id="playernamechoice">
+                <div id="playernameMenuTitle">Please Enter Your Player's Name</div>
+                <div>
+                    <input type="text" id="playernametext">
+                </div>
+                <div>
+                    <button id="playernamebutton">Submit</button>
+                </div>
+            </div>
+
+            <div id="genderchoice">
+                <div id="genderMenuTitle">Please Select Your Player's Gender</div>
+                <div id="genderchoiceSelect">
+                    <div value="Male" class="genderchoiceSelect">Male</div>
+                    <div value="Female" class="genderchoiceSelect">Female</div>
+                    <div value="Other" class="genderchoiceSelect">Other</div>
+                </div>
+            </div>
+
+            <div id="textchoice">
+                <div id="textMenuTitle">Please Enter Your Player's Name</div>
+                <div>
+                    <input type="text" id="textinput">
+                </div>
+                <div>
+                    <button id="textbutton">Submit</button>
+                </div>
+            </div>
+
+            <div id="textactionchoice">
+                <div id="textactionMenuTitle">Please Enter Your Player's Name</div>
+                <div>
+                    <input type="text" id="textactioninput">
+                </div>
+                <div>
+                    <button id="textactionbutton">Submit</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="live-timer-display" style="display: none;">
+            <h4>Live Timers</h4>
+            <table>
+                <tbody class="live-timer-display-rows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="PlayerRow">
+    <div class="compass-and-portrait">
+        <div class="compass-up-down">
+            <div class="compass-direction-rows">
+                <div class="compass-direction-row">
+                    <div class="compass-direction" data-direction="Up"></div>
+                </div>
+                <div class="compass-direction-row">
+                    <div class="compass-direction" data-direction="Down"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="compass-rose">
+            <div class="compass-direction-rows">
+                <div class="compass-direction-row">
+                    <div class="compass-direction" data-direction="NorthWest"></div>
+                    <div class="compass-direction" data-direction="North"></div>
+                    <div class="compass-direction" data-direction="NorthEast"></div>
+                </div>
+                <div class="compass-direction-row">
+                    <div class="compass-direction" data-direction="West"></div>
+                    <div class="compass-center">
+                        <button class="compass-direction" id="bIn" data-direction="In" style="background-color:green;">In</button>
+                        <button class="compass-direction" id="bOut" data-direction="Out" style="background-color:green;">Out</button>
+                    </div>
+                    <div class="compass-direction" data-direction="East"></div>
+                </div>
+                <div class="compass-direction-row">
+                    <div class="compass-direction" data-direction="SouthWest"></div>
+                    <div class="compass-direction" data-direction="South"></div>
+                    <div class="compass-direction" data-direction="SouthEast"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portrait-holder">
+            <div id="PlayerImg"></div>
+            <div id="PortraitImageLayers"></div>
+        </div>
+    </div>
+
+    <div id="RoomObjectsPanel">
+        <div id="RoomObjectsTitle">Room Objects:</div>
+        <div id="RoomObjects"></div>
+    </div>
+    <div id="VisibleCharactersPanel">
+        <div id="VisibleCharactersTitle">Visible Characters:</div>
+        <div id="VisibleCharacters"></div>
+    </div>
+    <div id="InventoryPanel">
+        <div id="InventoryTitle">Inventory:</div>
+        <div id="Inventory"></div>
+    </div>
+</div>
+
+<footer id="statusbar">
+    <div id="statusbartext"></div>
+</footer>
+<div id="selectionmenu">
+    <div id="Actionchoices"></div>
+</div>
+
+<audio id="BGMusic" autoplay>
+    <source id="bgmusicsource" src=""/>
+</audio>
+
+<audio id="SoundEffect" autoplay>
+    <source id="semusicsource" src=""/>
+</audio>
+
+<div class="save-menu hidden modal-backdrop">
+    <div class="save-menu-content">
+        <div class="savegames-header">
+            <h3>Save Game</h3>
+            <button id="new_savegame" class="btn">Create a New Save</button>
+            <button class="export_savegames btn btn">Export Saves</button>
+            <button class="import_savegames btn btn">Import Saves</button>
+            <button class="destroy_savegames btn btn-danger">Destroy All Saves</button>
+        </div>
+        <table class="savegames-table">
+            <thead>
+            <tr>
+                <th>id</th>
+                <th class="name-column">name</th>
+                <th>date</th>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody class="save-load-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="load-menu hidden modal-backdrop">
+    <div class="load-menu-content">
+        <div class="savegames-header">
+            <h3>Load Game</h3>
+            <button class="export_savegames btn btn">Export Saves</button>
+            <button class="import_savegames btn btn">Import Saves</button>
+            <button class="destroy_savegames btn btn-danger">Destroy All Saves</button>
+        </div>
+        <table class="savegames-table">
+            <thead>
+            <tr>
+                <th>id</th>
+                <th class="name-column">name</th>
+                <th>date</th>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody class="save-load-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="export-menu hidden modal-backdrop">
+    <div class="export-menu-content">
+        To export, "Right-click + Save as..." on this link:
+        <div>
+            <a href="#" class="export-download-link">EXPORT</a>
+        </div>
+        <div class="export-menu-actions">
+            <button class="btn">Dismiss</button>
+        </div>
+    </div>
+</div>
+
+<div class="import-menu hidden modal-backdrop">
+    <div class="import-menu-content">
+        To import, choose a .json file of exported saves in this picker:
+        <div>
+            <input type="file">
+        </div>
+        <div class="import-menu-actions">
+            <button class="btn">Dismiss</button>
+        </div>
+    </div>
+</div>
+
+<div class="cheat-menu hidden modal-backdrop"></div>
+
+<div id="tooltip">
+</div>
+
+</body>
+
+</html>
