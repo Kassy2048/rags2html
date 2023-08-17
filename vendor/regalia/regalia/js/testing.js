@@ -424,7 +424,7 @@ function handleFileSave(bQuick, bNew, CurID, oldSaveName) {
     var curdate = new Date();
     if (bQuick) {
         SavedGames.createSave(0, 'QuickSave', curdate, SavedGames.saveDataFor(TheGame));
-        alert("Quick Saved");
+        GameUI.showMessage('Quick Saved', {type: 'success', timeout: 3.0});
     } else {
         var saveName = prompt("Give a name for the save", oldSaveName);
         if (saveName === null) {
@@ -432,7 +432,7 @@ function handleFileSave(bQuick, bNew, CurID, oldSaveName) {
         }
 
         SavedGames.createSave(bNew ? SavedGames.nextSaveId() : CurID, saveName, curdate, SavedGames.saveDataFor(TheGame));
-        alert("Game Saved");
+        GameUI.showMessage('Game Saved', {type: 'success', timeout: 3.0});
     }
 }
 
@@ -459,9 +459,9 @@ function handleFileSelect(bQuick, CurID) {
     GameUI.showGameElements();
 
     if (bQuick) {
-        alert("Quick Loaded");
+        GameUI.showMessage('Quick Loaded', {type: 'success', timeout: 3.0});
     } else {
-        alert("Game Loaded");
+        GameUI.showMessage('Game Loaded', {type: 'success', timeout: 3.0});
     }
 }
 

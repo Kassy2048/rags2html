@@ -317,7 +317,7 @@ var GameCommands = {
             }
             case "CT_ENDGAME": {
                 AddTextToRTF(cmdtxt + "\r\n", "Black", "Regular");
-                alert("EndGame");
+                GameUI.showMessage('EndGame', {type: 'warning', timeout: 5.0});
                 GameUI.hideGameElements();
                 break;
             }

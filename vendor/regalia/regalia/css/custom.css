@@ -28,7 +28,7 @@ body {
 }
 
 .mainrow {
-    position: static;
+    position: relative;
     flex: 1 1 auto;
     display: flex;
 }

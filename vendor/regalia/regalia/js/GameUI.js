@@ -412,4 +412,45 @@ var GameUI = {
             this.lastScrollHeight = MainText[0].scrollHeight;
         }
     },
+
+    showMessage: function(text, params) {
+        if(params === undefined) {
+            params = {
+                //type: string,    // message type: error, warning, success
+                //timeout: float,  // message type: seconds before hiding it
+                //html: boolean,   // message text is HTML if set
+            };
+        }
+
+        const $message = $('<div class="message"><div class="message-close"></div></div>');
+
+        switch(params.type) {
+            case 'error': $message.addClass('error'); break;
+            case 'warning': $message.addClass('warning'); break;
+            case 'success': $message.addClass('success'); break;
+            case undefined: break;
+            default: console.warn(`Message type ${params.type} is not supported`);
+        }
+
+        const $text = $('<div class="message-text"></div>');
+        if(params.html) $text.html(text);
+        else $text.text(text);
+        console.log(text);
+
+        $message.prepend($text);
+
+        $message.on('click', (e) => {
+            if(e.target.className == 'message-close') {
+                $message.remove();
+            }
+        });
+
+        $("#MessagePane").append($message);
+
+        if(params.timeout !== undefined) {
+            window.setTimeout(() => {
+                $message.remove();
+            }, params.timeout * 1000.0);
+        }
+    },
 };

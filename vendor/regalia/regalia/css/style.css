@@ -230,3 +230,56 @@ td {
     background-color: white;
     visibility: hidden;
 }
+
+#MessagePane {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#MessagePane .message {
+    background-color: rgba(128, 128, 128, 0.8);
+    padding: 5px 10px;
+    margin-top: 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#MessagePane .message.error {
+    background-color: rgba(255, 128, 128, 0.8);
+}
+
+#MessagePane .message.warning {
+    background-color: rgba(255, 192, 96, 0.8);
+}
+
+#MessagePane .message.success {
+    background-color: rgba(128, 255, 128, 0.8);
+}
+
+#MessagePane .message-text {
+    text-align: center;
+}
+
+#MessagePane .message-close {
+    display: inline;
+}
+
+#MessagePane .message-close::after {
+    content: 'X';
+    color: white;
+    margin-left: 1em;
+    font-size: smaller;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+#MessagePane .message-close:hover::after {
+    opacity: 1.0;
+}
