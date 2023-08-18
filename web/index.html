@@ -1,0 +1,181 @@
+<html>
+  <head>
+    <title>Rags2Html</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <script defer src="script.js"></script>
+    <style>
+body {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: pink;
+}
+
+#log {
+    flex-grow: 1;
+    background-color: black;
+    white-space: pre-wrap;
+    font-family: monospace;
+    padding: 2px 5px;
+    overflow: auto;
+}
+
+.controls {
+    text-align: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.howto {
+    color: deeppink;
+    text-align: center;
+    font-weight: bold;
+    font-size: x-large;
+    display: none;
+}
+
+.howto a {
+    color: deeppink;
+}
+
+#dropzone {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: pink;
+    opacity: 0.8;
+    display: flex;
+    pointer-events: none;
+}
+
+#dropzone > div {
+    width: 100%;
+    margin: 20px;
+    border-radius: 20px;
+    border: 5px dashed hotpink;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: xx-large;
+    color: hotpink;
+}
+
+.dragicon {
+    width: 128px;
+    height: 128px;
+    background-color: hotpink;
+    /* Drag and drop icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/drag-and-drop) */
+    -webkit-mask-image: url(drag-and-drop-128px.png);
+    mask-image: url(drag-and-drop-128px.png);
+}
+
+.github-link {
+    position: absolute;
+    right: 1%;
+    top: 0;
+}
+
+.github-link img {
+    height: 1.5em;
+}
+
+/* https://stackoverflow.com/a/41430146 */
+.progress {
+    height: 1.5em;
+    width: 100%;
+    position: relative;
+    border-radius: 10px 10px 0px 0px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.progress:before {
+    content: attr(data-label);
+    font-size: 1.0em;
+    font-family: sans-serif;
+    position: absolute;
+    text-align: center;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.progress .value {
+    background-color: hotpink;
+    display: inline-block;
+    height: 100%;
+}
+
+#playframe {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    border: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 0, 0, 0.5);
+}
+
+    </style>
+  </head>
+  <body>
+
+    <py-config>
+terminal = false
+packages = ["cryptography"]
+    </py-config>
+
+    <div class="controls">
+        <label>RAGS Game File: <input type="file" id="file" /></label>
+        <!-- <label><input type="checkbox" id="show-info" /> Only show game info</label> -->
+        <label>Action: <select id="action">
+            <option value="download" selected>Download HTML game</option>
+            <option value="info">Show game info</option>
+            <option value="play" disabled>Play game</option>
+        </select></label>
+        <a id="dlfile" style="display: none">Download converted file</a>
+        <a href="https://github.com/Kassy2048/rags2html" class="github-link" title="GitHub repository">
+            <img src="github-mark-pink.svg" />
+        </a>
+    </div>
+    <div id="progress" class="progress" data-label="">
+        <span class="value" style="width: 0"></span>
+    </div>
+    <div id="log">
+        <div class="howto">
+This page converts RAGS (Rapid Adventure Game System) games into HTML games that can be played in a web browser.
+Select a RAGS game file using the control above or drag'n'drop it directly on the page to start the conversion.
+At the end of the conversion process, a ZIP file will be generated. Extract that ZIP file then run "index.html" in your favorite browser.
+The conversion happens in your browser, nothing is ever sent to the Web server. For big RAGS files, it is recommended to use the conversion script in a terminal instead (this is ~4x faster and uses less memory).
+
+You can also play RAGS games directly in the browser by selecting "Play game" in the Action drop-down list above, then drag'n'drop the game file on this page. This might not be available on some browsers, and is less recommended than downloading the converted game and running the "index.html" file.
+
+More info: <a href="https://github.com/Kassy2048/rags2html">https://github.com/Kassy2048/rags2html</a>
+Using Regalia: <a href="https://github.com/selectivepaperclip/regalia">https://github.com/selectivepaperclip/regalia</a>
+        </div>
+    </div>
+
+    <div id="dropzone" style="display: none">
+        <div>
+            <div class="dragicon"></div>
+            <div>Drop RAGS files here</div>
+        </div>
+    </div>
+
+    <iframe id="playframe"></iframe>
+
+  </body>
+</html>
