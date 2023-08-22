@@ -144,7 +144,6 @@ packages = ["cryptography"]
         <label>Action: <select id="action">
             <option value="download" selected>Download HTML game</option>
             <option value="info">Show game info</option>
-            <option value="play" disabled>Play game</option>
         </select></label>
         <a id="dlfile" style="display: none">Download converted file</a>
         <a href="https://github.com/Kassy2048/rags2html" class="github-link" title="GitHub repository">
@@ -159,9 +158,9 @@ packages = ["cryptography"]
 This page converts RAGS (Rapid Adventure Game System) games into HTML games that can be played in a web browser.
 Select a RAGS game file using the control above or drag'n'drop it directly on the page to start the conversion.
 At the end of the conversion process, a ZIP file will be generated. Extract that ZIP file then run "index.html" in your favorite browser.
-The conversion happens in your browser, nothing is ever sent to the Web server. For big RAGS files, it is recommended to use the conversion script in a terminal instead (this is ~4x faster and uses less memory).
+You can also open the ZIP file using <a href="https://kassy2048.github.io/zip2web/">zip2web</a> in order to play it in the browser without having to extract it (especially useful for mobiles).
 
-You can also play RAGS games directly in the browser by selecting "Play game" in the Action drop-down list above, then drag'n'drop the game file on this page. This might not be available on some browsers, and is less recommended than downloading the converted game and running the "index.html" file.
+The conversion happens in your browser, nothing is ever sent to the Web server. For big RAGS files, it is recommended to use the conversion script in a terminal instead (this is ~4x faster and uses less memory).
 
 More info: <a href="https://github.com/Kassy2048/rags2html">https://github.com/Kassy2048/rags2html</a>
 Using Regalia: <a href="https://github.com/selectivepaperclip/regalia">https://github.com/selectivepaperclip/regalia</a>
@@ -174,8 +173,6 @@ Using Regalia: <a href="https://github.com/selectivepaperclip/regalia">https://g
             <div>Drop RAGS files here</div>
         </div>
     </div>
-
-    <iframe id="playframe"></iframe>
 
   </body>
 </html>

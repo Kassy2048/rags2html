@@ -117,18 +117,9 @@ async function onPyReady() {
         action.disabled = true;
 
         try {
-            const playGame = action.value == 'play';
             const showInfo = action.value == 'info';
 
-            if(playGame && serviceWorker === undefined) {
-                convertProgress(0, 'Setting up service worker...');
-
-                serviceWorker = await setupServiceWorker();
-
-                convertProgress(0.05, 'Fetching game file...');
-            } else {
-                convertProgress(0, 'Fetching game file...');
-            }
+            convertProgress(0, 'Fetching game file...');
 
             // Reset
             dlFile.style.display = 'none';
@@ -158,7 +149,6 @@ import rags2html
 
 fpath = "${filePath.replaceAll(/[\\"]/g, "\\$&")}"
 outPath = os.path.splitext(fpath)[0]
-zipGame = ${playGame ? "False" : "True"}
 
 lastProgress = None
 def progress(full_progress, task, task_progress, task_total=None):
@@ -177,40 +167,36 @@ await rags2html.main(['rags2html', fpath ${showInfo ? ", '--info'" : ""}], progr
 os.unlink(fpath)
 
 if os.path.exists(os.path.join(outPath, 'regalia', 'game', 'Game.js')):
-    if zipGame:
-        print("Writing ZIP file...")
-        js.convertProgress(0.9, 'Writing ZIP file...', -1)
+    print("Writing ZIP file...")
+    js.convertProgress(0.9, 'Writing ZIP file...', -1)
 
-        compressExt = set(('.html', '.js', '.json', '.css', '.txt'))
+    compressExt = set(('.html', '.js', '.json', '.css', '.txt'))
 
-        def zipTree(zip, path, basePath):
-            if os.path.isdir(path):
-                for entry in os.listdir(path):
-                    zipTree(zip, os.path.join(path, entry), basePath)
-            elif os.path.isfile(path):
-                compression = zipfile.ZIP_STORED
-                if os.path.splitext(path)[1].lower() in compressExt:
-                    # Only compress text files
-                    compression=zipfile.ZIP_DEFLATED
-                
-                zip.write(path, arcname=os.path.relpath(path, basePath), compress_type=compression)
+    def zipTree(zip, path, basePath):
+        if os.path.isdir(path):
+            for entry in os.listdir(path):
+                zipTree(zip, os.path.join(path, entry), basePath)
+        elif os.path.isfile(path):
+            compression = zipfile.ZIP_STORED
+            if os.path.splitext(path)[1].lower() in compressExt:
+                # Only compress text files
+                compression=zipfile.ZIP_DEFLATED
+            
+            zip.write(path, arcname=os.path.relpath(path, basePath), compress_type=compression)
 
-        with zipfile.ZipFile(outPath + '.zip', mode='w') as zip:
-            zipTree(zip, outPath, os.path.dirname(outPath))
-            zip.comment = (('Converted from "%s" with Rags2Html.\\n'
-                    + "Rags2Html repository: https://github.com/Kassy2048/rags2html\\n"
-                    + "Using Regalia: https://github.com/selectivepaperclip/regalia")
-                        % (os.path.basename(fpath))).encode('utf-8')
+    with zipfile.ZipFile(outPath + '.zip', mode='w') as zip:
+        zipTree(zip, outPath, os.path.dirname(outPath))
+        zip.comment = (('Converted from "%s" with Rags2Html.\\n'
+                + "Rags2Html repository: https://github.com/Kassy2048/rags2html\\n"
+                + "Using Regalia: https://github.com/selectivepaperclip/regalia")
+                    % (os.path.basename(fpath))).encode('utf-8')
 
-        js.resultPath = outPath + '.zip'
-    else:
-        js.resultPath = outPath
+    js.resultPath = outPath + '.zip'
 else:
     js.resultPath = False
 
 # Cleanup
-if zipGame or js.resultPath is False:
-    shutil.rmtree(outPath, ignore_errors=True)
+shutil.rmtree(outPath, ignore_errors=True)
 `);
             await syncfs(false);
 
@@ -218,21 +204,14 @@ if zipGame or js.resultPath is False:
                 convertProgress(1.0, `Info extracted in ${Math.round((performance.now() - start) / 1000)} seconds`);
             } else if(resultPath !== false) {
                 console.log('Success!');
-                if(playGame) {
-                    convertProgress(1.0, `Done in ${Math.round((performance.now() - start) / 1000)} seconds`);
-                    // Open iframe with game in it
-                    playframe.src = playBaseUrl + resultPath + '/index.html';
-                    playframe.style.display = 'block';
-                } else {
-                    convertProgress(0.95, 'Downloading ZIP file...', -1);
-                    dlFile.download = resultPath.slice(resultPath.lastIndexOf('/') + 1);
-                    dlFile.href = window.URL.createObjectURL(new Blob([FS.readFile(resultPath)],
-                            { type: 'application/zip'}));
-                    dlFile.style.display = 'unset';
-                    console.debug(`Conversion took ${performance.now() - start} ms`);
-                    convertProgress(1.0, `Done in ${Math.round((performance.now() - start) / 1000)} seconds`);
-                    dlFile.click();
-                }
+                convertProgress(0.95, 'Downloading ZIP file...', -1);
+                dlFile.download = resultPath.slice(resultPath.lastIndexOf('/') + 1);
+                dlFile.href = window.URL.createObjectURL(new Blob([FS.readFile(resultPath)],
+                        { type: 'application/zip'}));
+                dlFile.style.display = 'unset';
+                console.debug(`Conversion took ${performance.now() - start} ms`);
+                convertProgress(1.0, `Done in ${Math.round((performance.now() - start) / 1000)} seconds`);
+                dlFile.click();
             } else {
                 console.log('Conversion failed');
                 convertProgress(1.0, 'Conversion failed!');
@@ -316,111 +295,6 @@ if zipGame or js.resultPath is False:
         if(e.relatedTarget === null) {
             dropzone.style.display = 'none';
         }
-    });
-
-    // Service worker
-
-    let serviceWorker;
-    let pageId;
-    let playBaseUrl;
-
-    if(navigator.serviceWorker !== undefined) {
-        // Enable play option if service workers are supported
-        const playOption = action.querySelector('option[value="play"]');
-        playOption.disabled = false;
-    } else {
-        console.log("Service Worker not supported by browser, cannot play games directly.");
-    }
-
-    function setupServiceWorker() {
-        return new Promise((resolve, reject) => {
-            navigator.serviceWorker
-                .register("service-worker.js")
-                .then((registration) => {
-                    let serviceWorker;
-                    if(registration.installing) {
-                        serviceWorker = registration.installing;
-                        console.debug('installing');
-                    }
-                    if(registration.waiting) {
-                        serviceWorker = registration.waiting;
-                        console.debug('waiting');
-                    }
-                    if(registration.active) {
-                        serviceWorker = registration.active;
-                        console.debug('active');
-                    }
-
-                    if(serviceWorker) {
-                        console.debug('state', serviceWorker.state);
-                        if(serviceWorker.state == 'activated') {
-                            onServiceWorkerReady(serviceWorker);
-                        } else {
-                            serviceWorker.addEventListener("statechange", (e) => {
-                                console.debug('statechange', e.target.state);
-                                if(serviceWorker.state == 'activated') {
-                                    onServiceWorkerReady(serviceWorker);
-                                }
-                            });
-                        }
-                    }
-                })
-                //.catch((error) => {  // TODO Show error to user (or call reject)
-                //});
-
-            // XXX Using navigator.serviceWorker.ready does not work because this script/page is not
-            //     located under ./play/
-            // FIXME That's not true anymore now that the scope is ./
-            function onServiceWorkerReady(serviceWorker) {
-                console.log('ready', serviceWorker);
-
-                navigator.serviceWorker.addEventListener('message', (e) => {
-                    // https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
-                    console.debug('serviceWorker.message', e);
-                    const msg = e.data;
-                    switch(msg.name) {
-                        case 'getPageId-resp':
-                            pageId = msg.pageId;
-                            onPageIdReady(serviceWorker);
-                            break;
-
-                        case 'getFile':
-                            // Fetch file from virtual FS
-                            try {
-                                const content = FS.readFile(msg.path);
-                                serviceWorker.postMessage({name: 'getFile-resp', path: msg.path, id: msg.id, content: content}, [content.buffer]);
-                            } catch(error) {
-                                serviceWorker.postMessage({name: 'getFile-resp', path: msg.path, id: msg.id, error: 404});
-                            }
-                            break;
-
-                        case 'error':
-                            console.error('Error from service worker', msg.text);
-                            break;
-
-                        default:
-                            console.error('Invalid message from service worker', e);
-                    }
-                });
-
-                serviceWorker.postMessage({name: 'getPageId'});
-            }
-
-            function onPageIdReady(serviceWorker) {
-                playBaseUrl = 'play/' + encodeURIComponent(pageId) + '/';
-                resolve(serviceWorker);
-            }
-        });
-    }
-
-    playframe.addEventListener('load', (e) => {
-        // Replace window title with the iframe title
-        document.title = playframe.contentDocument.title;
-    });
-
-    playframe.addEventListener('error', (e) => {
-        console.error('Failed to load iframe', e);
-        alert('Error while loading the game');
     });
 
     // Persist settings
