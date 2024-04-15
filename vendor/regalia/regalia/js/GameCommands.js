@@ -72,10 +72,32 @@ var GameCommands = {
                 break;
             }
             case "CT_ITEM_GETRANDOMGROUP": {
-                throw new Error("CT_ITEM_GETRANDOMGROUP not implemented!");
+                var tempvar = Finder.variable(part2);
+                if (tempvar != null) {
+                    var items = TheGame.Objects.filter(function (item) {
+                        return item.GroupName === part3;
+                    });
+                    if (items.length > 0) {
+                        tempvar.sString = items[Math.floor(Math.random() * items.length)].name;
+                        break;
+                    }
+                }
+                tempvar.sString = "";
+                break;
             }
             case "CT_MM_GETRANDOMGROUP": {
-                throw new Error("CT_MM_GETRANDOMGROUP not implemented!");
+                var tempvar = Finder.variable(part2);
+                if (tempvar != null) {
+                    var images = TheGame.Images.filter(function (image) {
+                        return image.GroupName === part3;
+                    });
+                    if (images.length > 0) {
+                        tempvar.sString = images[Math.floor(Math.random() * images.length)].TheName;
+                        break;
+                    }
+                }
+                tempvar.sString = "";
+                break;
             }
             case "CT_Status_ItemVisibleInvisible": {
                 for (var i = 0; i < TheGame.StatusBarItems.length; i++) {

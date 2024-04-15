@@ -942,7 +942,8 @@ function ReplaceStatic(text, tempindex, change, loopobject) {
         },
         '[EXIT.DESTNAME]', function () {
             if (loopobject != null) {
-                return Finder.room(loopobject.DestinationRoom).Name;
+                const room = Finder.room(loopobject.DestinationRoom);
+                return room ? room.Name : null;
             }
         },
         '[EXIT.DESTID]', function () {
