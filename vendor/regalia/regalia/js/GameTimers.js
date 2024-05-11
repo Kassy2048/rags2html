@@ -80,11 +80,11 @@ var GameTimers = {
 
         UpdateStatusBars();
         runNextAfterPause(function () {
-            if (!timer.Active) {
-                return;
-            }
             if (timer._wasReset) {
                 return callback();
+            }
+            if (!timer.Active) {
+                return;
             }
             tempact = Finder.action(timer.Actions, "<<On Turn " + timer.TurnNumber.toString() + ">>");
             if (tempact != null) {
@@ -93,11 +93,11 @@ var GameTimers = {
             UpdateStatusBars();
 
             runNextAfterPause(function () {
-                if (!timer.Active) {
-                    return;
-                }
                 if (timer._wasReset) {
                     return callback();
+                }
+                if (!timer.Active) {
+                    return;
                 }
                 if (timer.TurnNumber == timer.Length) {
                     tempact = Finder.action(timer.Actions, "<<On Last Turn>>");

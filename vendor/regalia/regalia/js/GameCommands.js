@@ -611,7 +611,7 @@ var GameCommands = {
                 var temptimer = Finder.timer(part2);
                 if (temptimer != null) {
                     temptimer.TurnNumber = 0;
-                    temptimer._wasReset = false;
+                    temptimer._wasReset = true;
                 }
                 break;
             }
