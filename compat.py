@@ -228,7 +228,7 @@ class TextFont:
         style = specs['Style']
         if style != 0:
             style_str = []
-            for k, v in TextFont.STYLES:
+            for k, v in TextFont.STYLES.items():
                 if (style & k) != 0:
                     style_str.append(v)
             if len(style_str) > 0:
