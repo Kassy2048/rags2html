@@ -17,8 +17,15 @@ $(document).ready(function () {
     $("#cheat_button").click(function (e) {
         $('.cheat-menu').removeClass('hidden');
         $('.cheat-menu').off();
-        $('.cheat-menu').click(function (e) {
+        let hideMenu = false;
+        $('.cheat-menu').on('mousedown', function (e) {
+            // Hide dialog if click start is outside of the dialog
             if (!$.contains($('.cheat-menu-content')[0], e.target)) {
+                hideMenu = true;
+            }
+        });
+        $('.cheat-menu').on('mouseup', function (e) {
+            if (hideMenu) {
                 $('.cheat-menu').addClass('hidden');
             }
         });

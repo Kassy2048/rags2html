@@ -220,6 +220,17 @@ var GameVariable = function (_React$Component2) {
                 )
             );
         }
+    }], [{
+        key: "getDerivedStateFromProps",
+        value: function getDerivedStateFromProps(props, state) {
+            const value = valueForVariable(props.variable);
+            if(value !== state.value) {
+                return {
+                    value: value
+                };
+            }
+            return null;
+        }
     }]);
 
     return GameVariable;
@@ -376,6 +387,17 @@ var GameCustomProperty = function (_React$Component4) {
                     )
                 )
             );
+        }
+    }], [{
+        key: "getDerivedStateFromProps",
+        value: function getDerivedStateFromProps(props, state) {
+            // Update state if property value has changed in game
+            if(props.property.Value !== state.value) {
+                return {
+                    value: props.property.Value
+                };
+            }
+            return null;
         }
     }]);
 
