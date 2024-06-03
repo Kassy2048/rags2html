@@ -440,7 +440,7 @@ function handleFileSelect(bQuick, CurID) {
     var desiredId = bQuick ? 0 : CurID;
     var savedGame = SavedGames.getSave(desiredId);
 
-    TheGame = SetupGameData();
+    TheGame = SetupGameDataWithMap();
     GameUI.setGameTitle();
     SavedGames.applySaveToGame(TheGame, savedGame);
     if (savedGame.cheatFreezes) {
@@ -491,10 +491,16 @@ function retrieveExportData() {
     return JSON.stringify(resultArray);
 }
 
+function SetupGameDataWithMap() {
+    const gameData = SetupGameData();
+    Finder.addMaps(gameData);
+    return gameData;
+}
+
 function receivedText() {
     try {
-        OriginalGame = SetupGameData();
-        TheGame = SetupGameData();
+        OriginalGame = SetupGameDataWithMap();
+        TheGame = SetupGameDataWithMap();
         GameUI.setGameTitle();
         GameUI.setDefaultCompass();
         if (TheGame.Player.bPromptForName) {

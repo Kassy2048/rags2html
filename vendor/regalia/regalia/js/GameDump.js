@@ -4,6 +4,20 @@ function DumpGame() {
         return IDENT_SEP.repeat(level);
     }
 
+    function roomName(id) {
+        if(id == CurrentRoomGuid) return '<<CurrentRoom>>';
+        let room = Finder.room(id);
+        if(!!!room) return '<<???>>';
+        return room.Name;
+    }
+
+    function objectName(id) {
+        if(id == SelfObjectGuid) return '<<CurrentObject>>';
+        let obj = Finder.object(id);
+        if(!!!obj) return '<<???>>';
+        return obj.name;
+    }
+
     function buildCode(commands, indent, condPassed) {
         // condPassed: true, false or undefined
         let result = '';
@@ -17,19 +31,73 @@ function DumpGame() {
                 afterCondition = false;
 
                 // Command
+                let comments = [];
+                if(cmd.CommandName.length > 0) {
+                    comments.push(cmd.CommandName);
+                }
+
+                // TODO Limit the arguments shown based on command type?
+                switch(cmd.cmdtype) {
+                    case 'CT_VARIABLE_SET_RANDOMLY': {
+                        const tempvar = Finder.variable(cmd.CommandPart2);
+                        const randMin = parseInt(PerformTextReplacements(tempvar.dMin));
+                        const randMax = parseInt(PerformTextReplacements(tempvar.dMax));
+                        comments.push('range=[' + randMin + '; ' + randMax + ']');
+                        break;
+                    }
+
+                    case 'CT_MOVEITEMTOROOM': {  // part2=Item, part3=Room
+                        comments.push('item=' + JSON.stringify(objectName(cmd.CommandPart2)));
+                        comments.push('room=' + JSON.stringify(roomName(cmd.CommandPart3)));
+                        break;
+                    }
+
+                    case 'CT_MOVEITEMTOOBJ': {  // part2=Item, part3=Object
+                        comments.push('item=' + JSON.stringify(objectName(cmd.CommandPart2)));
+                        comments.push('object=' + JSON.stringify(objectName(cmd.CommandPart3)));
+                        break;
+                    }
+
+                    case 'CT_MOVEITEMTOCHAR': {  // part2=Item, part3=Character
+                        comments.push('item=' + JSON.stringify(objectName(cmd.CommandPart2)));
+                        break;
+                    }
+
+                    case 'CT_MOVEITEMTOCHAR': {  // part2=Item, part3=Character
+                        comments.push('item=' + JSON.stringify(objectName(cmd.CommandPart2)));
+                        break;
+                    }
+
+                    case 'CT_MOVECHAR': {  // part2=Character, part3=Room
+                        comments.push('room=' + JSON.stringify(roomName(cmd.CommandPart3)));
+                        break;
+                    }
+
+                    case 'CT_SETOBJECTACTION': {  // part2=Object, part3=Action
+                        comments.push('object=' + JSON.stringify(objectName(cmd.CommandPart2)));
+                        break;
+                    }
+
+                    case 'CT_SETROOMACTION': {  // part2=Room, part3=Action
+                        comments.push('room=' + JSON.stringify(roomName(cmd.CommandPart2)));
+                        break;
+                    }
+
+                    default:
+                        break;
+                }
+
+                if(comments.length > 0) {
+                    result += ident_str(indent) + '// ' + comments.join(', ') + '\n';
+                }
+
                 result += ident_str(indent) + cmd.cmdtype + '('
                         + JSON.stringify(cmd.CommandPart2) + ', '
                         + JSON.stringify(cmd.CommandPart3) + ', '
                         + JSON.stringify(cmd.CommandPart4) + ', '
                         + JSON.stringify(cmd.CommandText)
                         + (cmd.CustomChoices.length > 0 ? (', ' + JSON.stringify(cmd.CustomChoices)) : '')
-                        + ');';
-
-                if(cmd.CommandName.length > 0) {
-                    result += '  // ' + cmd.CommandName;
-                }
-
-                result += '\n';
+                        + ');\n';
             } else {
                 // Condition
                 const negate = cmd.PassCommands.length == 0 && cmd.FailCommands.length > 0;
@@ -167,7 +235,31 @@ function DumpGame() {
 
             for(let k in c) {
                 if(k == 'Actions') continue;
-                result += ident_str(indent) + k + ': ' + JSON.stringify(c[k]) + ',\n';
+
+                let line = ident_str(indent) + k + ': ' + JSON.stringify(c[k]) + ',';
+
+                // Convert locations to room/object names
+                if(k == 'CurrentRoom') {
+                    line += '  // ' + JSON.stringify(roomName(c[k]));
+                } else if(k == 'locationname') {
+                    switch(c.locationtype) {
+                        case 'LT_ROOM':
+                            line += '  // ' + JSON.stringify(roomName(c[k]));
+                            break;
+                        case 'LT_IN_OBJECT':
+                            line += '  // ' + JSON.stringify(objectName(c[k]));
+                            break;
+
+                        //case 'LT_CHARACTER':
+                        //case 'LT_NULL':
+                        //case 'LT_PLAYER':
+                        //case 'LT_PORTAL':
+                        default:
+                            break
+                    }
+                }
+
+                result += line + '\n';
             }
 
             result += ident_str(indent++) + 'Actions: [\n';
