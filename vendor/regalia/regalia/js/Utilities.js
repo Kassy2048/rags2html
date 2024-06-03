@@ -400,7 +400,7 @@ function AddTextToRTF(text, clr, fontst) {
     var replacedtext = text;
     if (fontst == "Regular" && clr == "Black") {
         // [c Green]green text[/c]
-        replacedtext = replacedtext.replace(/\[c\s*([^\]]+)]/g, function (match, colortype) {
+        replacedtext = replacedtext.replace(/\[c\s*([^\]]+)]/gi, function (match, colortype) {
             var colorinserter = "<span style='color:";
             if (colortype.indexOf(",") > -1) {
                 colorinserter += "rgb(" + colortype + ");'>";
@@ -411,29 +411,29 @@ function AddTextToRTF(text, clr, fontst) {
         });
 
         // [f Arial,16]special font[/f]
-        replacedtext = replacedtext.replace(/\[f\s*([^\]]+)]/g, function (match, fonttype) {
+        replacedtext = replacedtext.replace(/\[f\s*([^\]]+)]/gi, function (match, fonttype) {
             var fontdata = fonttype.split(",");
             return "<span style='font-family:" + fontdata[0] + ";font-size:" +
                 fontdata[1] + "px;'>";
         });
 
         // [b]bold text[/b]
-        replacedtext = replacedtext.replace(/\[b]/g, function (match) {
+        replacedtext = replacedtext.replace(/\[b]/gi, function (match) {
             return "<span style='font-weight:bold;'>";
         });
 
         // [i]italic text[/i]
-        replacedtext = replacedtext.replace(/\[i]/g, function (match) {
+        replacedtext = replacedtext.replace(/\[i]/gi, function (match) {
             return "<span style='font-style:italic;'>";
         });
 
         // [u]underlined text[/u]
-        replacedtext = replacedtext.replace(/\[u]/g, function (match) {
+        replacedtext = replacedtext.replace(/\[u]/gi, function (match) {
             return "<span style='text-decoration:underline;'>";
         });
 
         // closing tags ([/u], [/b]...)
-        replacedtext = replacedtext.replace(/\[\/[fciub]]/g, function (match) {
+        replacedtext = replacedtext.replace(/\[\/[fciub]]/gi, function (match) {
             return "</span>";
         });
 
