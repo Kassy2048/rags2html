@@ -589,16 +589,16 @@ function TestCustomProperty(PropVal, step3, step4) {
         if (bIntComparison) {
             bResult = iReplacedString == iPropVal;
         } else {
-            bResult = replacedstring.toLowerCase() == PropVal.toLowerCase();
+            bResult = (replacedstring && replacedstring.toLowerCase()) == (PropVal && PropVal.toLowerCase());
         }
     } else if (step3 == "Not Equals") {
         if (bIntComparison) {
             bResult = iReplacedString != iPropVal;
         } else {
-            bResult = replacedstring.toLowerCase() != PropVal.toLowerCase();
+            bResult = (replacedstring && replacedstring.toLowerCase()) != (PropVal && PropVal.toLowerCase());
         }
     } else if (step3 == "Contains") {
-        bResult = (PropVal.toLowerCase().indexOf(replacedstring.toLowerCase()) >= 0);
+        bResult = (PropVal.toLowerCase().indexOf(replacedstring && replacedstring.toLowerCase()) >= 0);
     } else if (step3 == "Greater Than") {
         if (bIntComparison) {
             bResult = iPropVal > iReplacedString;
