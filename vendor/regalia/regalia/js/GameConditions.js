@@ -252,12 +252,15 @@ var GameConditions = {
             }
             case "CT_Character_In_Room": {
                 var tempchar = Finder.character(step2);
-                if (step3 == CurrentRoomGuid) {
-                    var currentroom = Finder.room(TheGame.Player.CurrentRoom);
-                    return tempchar.CurrentRoom == currentroom.UniqueID;
-                } else {
-                    return (tempchar.CurrentRoom == step3);
+                if (tempchar != null) {
+                    if (step3 == CurrentRoomGuid) {
+                        var currentroom = Finder.room(TheGame.Player.CurrentRoom);
+                        return tempchar.CurrentRoom == currentroom.UniqueID;
+                    } else {
+                        return (tempchar.CurrentRoom == step3);
+                    }
                 }
+                return false;
             }
             case "CT_Character_In_RoomGroup": {
                 var tempchar = Finder.character(step2);
