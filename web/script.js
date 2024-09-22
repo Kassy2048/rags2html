@@ -91,6 +91,12 @@ async function onPyReady() {
 
     let busy = false;
 
+    fileInput.addEventListener('click', (e) => {
+        // Reset the field value so that the "change" event is triggered
+        // if the user selected the same file again
+        fileInput.value = null;
+    });
+
     fileInput.addEventListener('change', async (e) => {
         console.log(e);
         if(busy) return;
