@@ -2,9 +2,18 @@
   <head>
     <title>Rags2Html</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css" />
-    <script defer src="https://pyscript.net/releases/2024.11.1/core.js"></script>
-    <script defer src="script.js"></script>
+
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+    <script type="importmap">
+    {
+      "imports": {
+        "pyscript/core": "https://pyscript.net/releases/2024.11.1/core.js"
+      }
+    }
+    </script>
+
+    <script type="module" src="main_module.js"></script>
+
     <style>
 body {
     display: flex;
@@ -129,6 +138,29 @@ body {
     background-color: rgba(255, 0, 0, 0.5);
 }
 
+#load-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui;
+    font-size: xxx-large;
+    font-weight: bold;
+    color: hotpink;
+    animation: color-change 1s infinite alternate;
+}
+
+@keyframes color-change {
+  0% { color: red; }
+  50% { color: hotpink; }
+  100% { color: pink; }
+}
+
     </style>
   </head>
   <body>
@@ -136,7 +168,15 @@ body {
     <py-config>
 terminal = false
 packages = ["cryptography"]
+#TODO [files]
+#TODO "./rags2html.zip" = "./*"
     </py-config>
+
+    <script type="py">
+# We need a script for PyScript to load, so use that to remove the load screen
+from pyscript import document
+document.getElementById('load-screen').remove()
+    </script>
 
     <div class="controls">
         <label>RAGS Game File: <input type="file" id="file" /></label>
@@ -173,6 +213,8 @@ Using Regalia: <a href="https://github.com/selectivepaperclip/regalia">https://g
             <div>Drop RAGS files here</div>
         </div>
     </div>
+
+  <div id="load-screen">Loading, please wait...</div>
 
   </body>
 </html>

@@ -1,9 +1,13 @@
-async function onPyReady() {
-    console.debug('onPyReady - BEGIN');
+import { hooks } from "pyscript/core";  // from importmap
+
+hooks.main.onReady.add(async (wrap, element) => {
+    const pyscript = wrap;
+
+    console.debug('onPyReady - BEGIN', wrap);
 
     document.querySelector('.howto').style.display = 'revert';
 
-    const pyodide = pyscript.interpreter.interface;
+    const pyodide = pyscript.interpreter;
     const FS = pyodide.FS;
     window.FS = FS;  // DEBUG
 
@@ -16,6 +20,7 @@ async function onPyReady() {
     const dropzone = document.getElementById('dropzone');
     const playframe = document.getElementById('playframe');
 
+    // FIXME Hook wrap.io.stdout instead
     pyodide.setStdout({batched: (msg) => {
         console.log(msg);
         const line = document.createElement('span');
@@ -26,6 +31,7 @@ async function onPyReady() {
         logDiv.scrollTop = logDiv.scrollHeight;
     }});
 
+    // FIXME Hook wrap.io.stderr instead
     pyodide.setStderr({batched: (msg) => {
         console.log("%c" + msg, "color: salmon");
         const line = document.createElement('span');
@@ -46,6 +52,7 @@ async function onPyReady() {
         });
     }
 
+    // FIXME Tell PyScript to download and extract it in the py-config section instead
     let zipResponse = await fetch("rags2html.zip");
     let zipBinary = await zipResponse.arrayBuffer();
     pyodide.unpackArchive(zipBinary, "zip");
@@ -315,18 +322,4 @@ shutil.rmtree(outPath, ignore_errors=True)
     }
 
     console.debug('onPyReady - END');
-}
-
-/* Wait for PyScript to be loaded (is there no other way to do that?!!) */
-let pyReadyTimeout = 30 * 10;
-async function waitPyReady() {
-    if(pyscript?.runtime?.FS !== undefined) {
-        onPyReady();
-    } else if(--pyReadyTimeout > 0) {
-        setTimeout(waitPyReady, 100);
-    } else {
-        alert("Timeout while waiting for Python to load");
-    }
-}
-
-waitPyReady();
+});
