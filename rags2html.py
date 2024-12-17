@@ -1908,6 +1908,7 @@ async def process_file(fpath, keys, args, progress=None):
                 copy_function=copy_missing)
 
         out_path = os.path.join(out_dir, 'regalia', 'game', 'Game.js')
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
         with open(out_path, 'wt') as out:
             out.write(game_js)
 
