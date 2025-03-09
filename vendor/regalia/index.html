@@ -62,10 +62,7 @@
         <b class="game-title"></b>
     </div>
     <div class="menuitem">
-        <button id="load">Load</button>
-    </div>
-    <div class="menuitem">
-        <button id="save">Save</button>
+        <button id="save">Load/Save</button>
     </div>
     <div class="menuitem">
         <button id="cheat_button">Cheat</button>
@@ -245,33 +242,14 @@
         <table class="savegames-table">
             <thead>
             <tr>
+                <!-- Load button -->
+                <th></th>
                 <th>id</th>
                 <th class="name-column">name</th>
                 <th>date</th>
+                <!-- Overwrite button -->
                 <th></th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody class="save-load-table-body"></tbody>
-        </table>
-    </div>
-</div>
-
-<div class="load-menu hidden modal-backdrop">
-    <div class="load-menu-content">
-        <div class="savegames-header">
-            <h3>Load Game</h3>
-            <button class="export_savegames btn btn">Export Saves</button>
-            <button class="import_savegames btn btn">Import Saves</button>
-            <button class="destroy_savegames btn btn-danger">Destroy All Saves</button>
-        </div>
-        <table class="savegames-table">
-            <thead>
-            <tr>
-                <th>id</th>
-                <th class="name-column">name</th>
-                <th>date</th>
-                <th></th>
+                <!-- Destroy button -->
                 <th></th>
             </tr>
             </thead>

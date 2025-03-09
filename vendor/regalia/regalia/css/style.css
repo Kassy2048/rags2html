@@ -79,16 +79,17 @@ table {
     width: 100%;
 }
 
-.save-menu-content, .load-menu-content {
-    position: absolute;
+.save-menu-content {
     background-color: White;
-    max-height: 300px;
+    max-height: 80%;
     border: 1px solid grey;
     display: flex;
     flex-direction: column;
+    margin: auto;
+    margin-top: 40px;  /* menu height + 10 px */
 }
 
-.save-menu-content h3, .load-menu-content h3 {
+.save-menu-content h3 {
     margin: 0 0 4px 0;
 }
 
@@ -114,6 +115,10 @@ table {
 
 .btn:hover {
     background: #aaa;
+}
+
+[disabled] {
+    cursor: not-allowed;
 }
 
 .btn.btn-danger {
@@ -146,8 +151,12 @@ table {
     border: 1px solid grey;
 }
 
-.savegames-table .name-column {
-    width: 220px;
+.savegames-table .save-name {
+    width: 200px;
+    border: none;
+    resize: none;
+    vertical-align: middle;
+    max-height: 10em;
 }
 
 td {
