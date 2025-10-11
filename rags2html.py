@@ -1201,6 +1201,15 @@ async def process_file(fpath, keys, args, progress=None):
                             out.write(img_data)
                     entry['FilePath'] = 'images/' + fname
 
+                def getID(obj, *propNames):
+                    # For very old games, there is no UID, so use object name instead
+                    for name in propNames:
+                        id = obj.get(name)
+                        if id is not None:
+                            return id
+
+                    raise RuntimeError('Failed to find ID using %s: %s' % (propNames, obj))
+
                 # Fix circular references
 
                 for entry in game['RoomList']:
@@ -1210,13 +1219,7 @@ async def process_file(fpath, keys, args, progress=None):
                             exit['DestinationRoom'] = ''
                         elif not isinstance(DestinationRoom, str):
                             # A reference to the Room object is sometimes used instead of its UID
-                            exit['DestinationRoom'] = DestinationRoom.get('UniqueID', '')
-
-                ThePlayer = game['ThePlayer']
-                StartingRoom = ThePlayer['StartingRoom']
-                if not isinstance(StartingRoom, str):
-                    # A reference to the Room object is sometimes used instead of its UID
-                    ThePlayer['StartingRoom'] = StartingRoom['UniqueID']
+                            exit['DestinationRoom'] = getID(DestinationRoom, 'UniqueID', 'Name')
 
                 # Extract raw JSON files from the game for debug
                 if args.data_debug:
@@ -1236,6 +1239,12 @@ async def process_file(fpath, keys, args, progress=None):
                         out.write(json.dumps(game_data, default=json_encode, sort_keys=True, indent=2))
 
                 # Convert "game" into arguments for create_game_js()
+
+                ThePlayer = game['ThePlayer']
+                StartingRoom = ThePlayer['StartingRoom']
+                if not isinstance(StartingRoom, str):
+                    # A reference to the Room object is sometimes used instead of its UID
+                    ThePlayer['StartingRoom'] = getID(StartingRoom, 'UniqueID', 'Name')
 
                 print('Converting old format...')
                 if progress is not None:
@@ -1340,7 +1349,7 @@ async def process_file(fpath, keys, args, progress=None):
                     'Title': game['Title'],
                     'OpeningMessage': game['OpeningMessage'],
                     'ObjectVersionNumber': game['ObjectVersionNumber'],
-                    'GameFont': game['GameFont'],
+                    'GameFont': game.get('GameFont', 'Microsoft Sans Serif, 8.25pt'),
                     'ClothingZoneLevels': ','.join(game.get('LayeredClothingZones', ['Upper Body', 'Mid Body', 'Lower Body'])),
                     'HideMainPicDisplay': game.get('HideMainPicDisplay', False),
                     'UseInlineImages': game.get('UseInlineImages', False),
@@ -1379,14 +1388,14 @@ async def process_file(fpath, keys, args, progress=None):
                     # GroupName, EnforceRestrictions, VarComment, VariableProperties}
                     variables.append({
                         'VarType': entry['vartype'],
-                        'VarArray': entry['VarArray'],
+                        'VarArray': entry.get('VarArray', None),
                         'dtDateTime': entry['dtDateTime'],
                         'NumType': entry['dNumType'],
-                        'Min': entry['dMin'],
-                        'Max': entry['dMax'],
+                        'Min': entry.get('dMin', 0.0),
+                        'Max': entry.get('dMax', 100.0),
                         'String': entry['sString'],
                         'VarName': entry['varname'],
-                        'EnforceRestrictions': entry['bEnforceRestrictions'],
+                        'EnforceRestrictions': entry.get('bEnforceRestrictions', False),
                         'VarComment': entry.get('VarComment', ''),
                         'VariableProperties': entry.get('CustomProperties', []),
                     })
@@ -1436,7 +1445,7 @@ async def process_file(fpath, keys, args, progress=None):
                         'LayeredRoomPic': entry.get('LayeredRoomPic', 'None'),
                         'EnterFirstTime': entry['bEnterFirstTime'],
                         'LeaveFirstTime': entry['bLeaveFirstTime'],
-                        'UniqueID': entry['UniqueID'],
+                        'UniqueID': getID(entry, 'UniqueID', 'Name'),
                         'Exits': exits,
                         'Properties': entry.get('CustomProperties', []),
                         'Actions': [js_convert_action(action) for action in entry['Actions']],
@@ -1459,7 +1468,7 @@ async def process_file(fpath, keys, args, progress=None):
                         'Description': entry['Description'],
                         'CharGender': entry['CharGender'],
                         'CurrentRoom': entry['CurrentRoom'],
-                        'AllowInventoryInteraction': entry['bAllowInventoryInteraction'],
+                        'AllowInventoryInteraction': entry.get('bAllowInventoryInteraction', False),
                         'Properties': entry.get('CustomProperties', []),
                         'Actions': [js_convert_action(action) for action in entry['Actions']],
                     })
@@ -1501,12 +1510,12 @@ async def process_file(fpath, keys, args, progress=None):
 
                     objects.append({
                         'Name': entry['name'],
-                        'UniqueID': entry['UniqueIdentifier'],
+                        'UniqueID': getID(entry, 'UniqueIdentifier', 'name'),
                         'LocationType': entry['locationtype'],
                         'LocationName': entry['locationname'],
                         'Description': entry['description'],
                         'SDesc': entry['sdesc'],
-                        'Preposition': entry['preposition'],
+                        'Preposition': entry.get('preposition', 'a'),
                         'Carryable': entry['bCarryable'],
                         'Wearable': entry['bWearable'],
                         'Openable': entry['bOpenable'],
@@ -1519,7 +1528,7 @@ async def process_file(fpath, keys, args, progress=None):
                         'Read': entry['bRead'],
                         'Locked': entry['bLocked'],
                         'Open': entry['bOpen'],
-                        'Visible': entry['bVisible'],
+                        'Visible': entry.get('bVisible', True),
                         'ItemLayeredZoneLevels': entry.get('LayeredZoneLevels', []),
                         'Properties': entry.get('CustomProperties', []),
                         'Actions': [js_convert_action(action) for action in entry['Actions']],
