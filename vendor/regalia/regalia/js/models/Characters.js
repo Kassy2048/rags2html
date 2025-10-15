@@ -12,6 +12,23 @@ function character() {
     this.bLeaveFirstTime = false;
     this.bAllowInventoryInteraction = false;
     this.CustomProperties = [];
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            Charname: this.Charname,
+            CharnameOverride: this.CharnameOverride,
+            Actions: ArrayCloneForDiff(this.Actions),
+            CharGender: this.CharGender,
+            CurrentRoom: this.CurrentRoom,
+            Description: this.Description,
+            CharPortrait: this.CharPortrait,
+            bEnterFirstTime: this.bEnterFirstTime,
+            bLeaveFirstTime: this.bLeaveFirstTime,
+            bAllowInventoryInteraction: this.bAllowInventoryInteraction,
+            CustomProperties: ArrayCloneForDiff(this.CustomProperties),
+        };
+    };
 }
 
 function CharToString(thechar) {

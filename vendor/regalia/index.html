@@ -18,7 +18,10 @@
     <script src="regalia/vendor/react.production.min.js"></script>
     <script src="regalia/vendor/react-dom.production.min.js"></script>
     <script src="regalia/vendor/moment.min.js"></script>
+    <script src="regalia/vendor/lzma_worker.min.js"></script>
+    <script src="regalia/vendor/csharp-assembly-dump.js"></script>
     <script src="regalia/js/polyfills.js"></script>
+    <script src="regalia/js/Settings.js"></script>
     <script src="regalia/game/Game.js"></script>
     <script src="regalia/js/DateTimes.js"></script>
     <script src="regalia/js/Constants.js"></script>
@@ -54,18 +57,26 @@
     <script src="regalia/js/Cheat.js"></script>
     <script src="regalia/js/components/CheatMenuComponents.js"></script>
     <script src="regalia/js/GameDump.js"></script>
+    <script src="regalia/js/GameHistory.js"></script>
 </head>
 
 <body>
 <header id="menu">
     <div class="menuitem">
         <b class="game-title"></b>
+        <span class="game-version"></span>
+    </div>
+    <div class="menuitem">
+        <button id="back" disabled>Back</button>
     </div>
     <div class="menuitem">
         <button id="save">Load/Save</button>
     </div>
     <div class="menuitem">
         <button id="cheat_button">Cheat</button>
+    </div>
+    <div class="menuitem">
+        <button id="options_button">Options</button>
     </div>
     <div class="menuitem">
         <button id="shrink_ui">Shrink UI</button>
@@ -222,7 +233,7 @@
     <div id="Actionchoices"></div>
 </div>
 
-<audio id="BGMusic" autoplay>
+<audio id="BGMusic" autoplay loop>
     <source id="bgmusicsource" src=""/>
 </audio>
 
@@ -233,7 +244,7 @@
 <div class="save-menu hidden modal-backdrop">
     <div class="save-menu-content">
         <div class="savegames-header">
-            <h3>Save Game</h3>
+            <h3>Game Saves</h3>
             <button id="new_savegame" class="btn">Create a New Save</button>
             <button class="export_savegames btn btn">Export Saves</button>
             <button class="import_savegames btn btn">Import Saves</button>
@@ -272,10 +283,11 @@
 
 <div class="import-menu hidden modal-backdrop">
     <div class="import-menu-content">
-        To import, choose a .json file of exported saves in this picker:
+        To import, choose a .json file of exported saves or .rsv file in this picker:
         <div>
-            <input type="file">
+            <input type="file" accept=".json,.rsv,.txt">
         </div>
+        <div class="import-menu-status"></div>
         <div class="import-menu-actions">
             <button class="btn">Dismiss</button>
         </div>
@@ -283,6 +295,39 @@
 </div>
 
 <div class="cheat-menu hidden modal-backdrop"></div>
+
+<div class="options-menu hidden modal-backdrop">
+    <div class="options-menu-content modal-content">
+        <div class="modal-header">
+            <h3>Options</h3>
+        </div>
+        <div class="modal-body">
+            <form id="options-form">
+                <label>
+                    <span style="flex-grow: 1">Music volume:</span>
+                    <input type="number" name="music-volume" min="0" max="100" step="1" />
+                    (%)
+                    <input type="range" name="music-volume-slider" min="0" max="100" step="1" />
+                </label>
+                <label>
+                    <span style="flex-grow: 1">SFX volume:</span>
+                    <input type="number" name="sfx-volume" min="0" max="100" step="1" />
+                    (%)
+                    <input type="range" name="sfx-volume-slider" min="0" max="100" step="1" />
+                </label>
+                <br>
+                <label><input type="checkbox" name="enable-history" />Enable history (back button)</label>
+                <label>History size: <input type="number" name="history-size" min="1" step="1" value="10" /> (states)</label>
+                <br>
+                <label><input type="checkbox" name="enable-darkmode" />Dark mode</label>
+                <br>
+                <label><input type="checkbox" name="enable-debug" />Debug mode</label>
+            </form></div>
+        <div class="modal-footer">
+            <button class="btn close-btn">Close</button>
+        </div>
+    </div>
+</div>
 
 <div id="tooltip">
 </div>

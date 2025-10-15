@@ -4,6 +4,13 @@ function statusbaritem() {
     this.Text = "";
     this.bVisible = true;
     this.width = 0;
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            bVisible: this.bVisible,
+        };
+    };
 }
 
 function SetupStatusBarData(GameData) {

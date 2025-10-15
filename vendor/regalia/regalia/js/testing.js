@@ -3,7 +3,7 @@
 }
 
 function hideSaveAndLoadMenus() {
-    GameUI.showGameElements();
+    // GameUI.showGameElements();
     $(".save-menu").addClass("hidden");
 }
 
@@ -12,7 +12,7 @@ $(function() {
         alert('The File APIs are not fully supported in this browser.');
     }
 
-    $('#regalia_version').text('Regalia 0.9.21');
+    $('#regalia_version').text('Regalia 0.9.31-K');
 
     function toggleBigPictureMode(on) {
         if (on === undefined) {
@@ -49,7 +49,7 @@ $(function() {
                 }
             case "F8":
                 {
-                    handleFileSave(true);
+                    if (!GameUI.saveDisabled) handleFileSave(true);
                     break;
                 }
             case "F9":
@@ -276,6 +276,7 @@ $(function() {
     });
 
     $(".import_savegames").on('click', function () {
+        $('.import-menu-status').html('');
         $('.import-menu').removeClass('hidden');
         $('.import-menu, .import-menu-actions button, .import-menu-content, .import-menu-content input').off();
         $('.import-menu-content input[type=file]').val('');
@@ -289,13 +290,38 @@ $(function() {
         });
 
         $('.import-menu-content input[type=file]').change(function (e) {
-            var reader = new FileReader();
-            reader.onload = function() {
-                SavedGames.import(JSON.parse(this.result));
-                $('.import-menu').addClass('hidden');
-                hideSaveAndLoadMenus();
-            };
-            reader.readAsText(this.files[0]);
+            const file = this.files[0];
+            const reader = new FileReader();
+            if(file.name.toLowerCase().endsWith('.rsv')) {
+                reader.onload = async (e) => {
+                    try {
+                        $('.import-menu-status').html('Loading RSV file...');
+                        // Let the HTML update
+                        await new Promise(r => setTimeout(r, 0));
+
+                        const root = await SavedGames.importRSV(e.target.result);
+
+                        $('.import-menu-status').text('Importing save data...');
+                        // Let the HTML update
+                        await new Promise(r => setTimeout(r, 0));
+
+                        $('.import-menu').addClass('hidden');
+                        hideSaveAndLoadMenus();
+                        handleFileSelect(false, '', root);
+                    } finally {
+                        $('.import-menu-status').html('');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.onload = function() {
+                    SavedGames.import(JSON.parse(this.result));
+                    $('.import-menu').addClass('hidden');
+                    hideSaveAndLoadMenus();
+                    GameUI.showMessage('Saves List Imported', {type: 'success', timeout: 3.0});
+                };
+                reader.readAsText(file);
+            }
         });
     });
     
@@ -340,6 +366,9 @@ $(function() {
                     hideSaveAndLoadMenus();
                 });
             });
+
+            $menu.find('button.overwrite-save, #new_savegame')
+                    .prop('disabled', GameUI.saveDisabled);
         };
     };
     $("#save").click(createSaveOrLoadMenuHandler($(".save-menu"), $('.save-menu-content')));
@@ -392,6 +421,7 @@ $(function() {
         }
         var direction = $el.data('direction');
         var newRoom = GetDestinationRoomName(direction);
+        TheGame.TurnCount++;
         ResetLoopObjects();
         Globals.bCancelMove = false;
         ActionRecorder.locationChange(direction);
@@ -439,6 +469,137 @@ $(function() {
     }, function() {
         $("#tooltip").css("visibility", "hidden");
     });
+
+    const $backButton = $("#back");
+    $backButton.click(function () {
+        GameHistory.popState();
+        this.disabled = !GameHistory.canGoBack();
+        this.title = GameHistory.noGoBackReason();
+    });
+
+    /* Options dialog setup */
+    {
+        const $backdrop = $(".options-menu");
+        const $menu = $('.options-menu-content');
+        const optionsForm = document.getElementById('options-form');
+
+        $backdrop.on('click', (e) => {
+            if (e.target !== e.currentTarget) return;
+            $backdrop.addClass("hidden");
+        });
+
+        function setVolume(audioEl, volume) {
+            volume /= 100;
+            audioEl.volume = volume;
+            // iOS workaround (because audioEl.volume is read-only)
+            audioEl.muted = volume == 0;
+        }
+
+        const BGMusic = document.getElementById('BGMusic');
+        const SoundEffect = document.getElementById('SoundEffect');
+
+        setVolume(BGMusic, Settings.musicVolume);
+        setVolume(SoundEffect, Settings.sfxVolume);
+        GameHistory.enabled = Settings.historyEnabled;
+        GameHistory.MAX_HISTORY_SIZE = Settings.historySize;
+
+        function onOptionChange(e) {
+            const field = e.target;
+            switch(field.name) {
+                case 'music-volume':
+                case 'music-volume-slider': {
+                    const value = parseInt(field.value);
+                    setVolume(BGMusic, value);
+                    Settings.musicVolume = value;
+                    if(field.name === 'music-volume') {
+                        optionsForm.elements['music-volume-slider'].value = value;
+                    } else {
+                        optionsForm.elements['music-volume'].value = value;
+                    }
+                    break;
+                }
+
+                case 'sfx-volume':
+                case 'sfx-volume-slider': {
+                    const value = parseInt(field.value);
+                    setVolume(SoundEffect, value);
+                    Settings.sfxVolume = value;
+                    if(field.name === 'sfx-volume') {
+                        optionsForm.elements['sfx-volume-slider'].value = value;
+                    } else {
+                        optionsForm.elements['sfx-volume'].value = value;
+                    }
+                    break;
+                }
+
+                case 'enable-history': {
+                    if (Settings.historyEnabled !== field.checked) {
+                        GameHistory.enabled = field.checked;
+                        if (!field.checked) {
+                            GameHistory.reset();
+                            $backButton.prop('disabled', true);
+                        }
+                        $backButton.prop('title', GameHistory.noGoBackReason());
+                        Settings.historyEnabled = field.checked;
+                    }
+                    break;
+                }
+
+                case 'history-size': {
+                    const value = parseInt(field.value);
+                    Settings.historySize = value;
+                    GameHistory.MAX_HISTORY_SIZE = value;
+                    break;
+                }
+
+                case 'enable-debug': {
+                    Settings.debugEnabled = field.checked;
+                    break;
+                }
+
+                case 'enable-darkmode': {
+                    Settings.darkMode = field.checked;
+                    GameUI.setDarkMode(Settings.darkMode);
+                    break;
+                }
+            }
+        }
+
+        $(optionsForm)
+            .on('change', onOptionChange)
+            .on('input', (e) => {
+                const field = e.target;
+                // The change event is only triggered when the user release the
+                // mouse button for sliders, so use the input event instead.
+                if(field.name.endsWith('-slider')) onOptionChange(e);
+            })
+            .on('submit', (e) => {
+                e.preventDefault();
+                $backdrop.addClass("hidden");
+            });
+
+        $("#options_button").on('click', (e) => {
+            optionsForm.elements['music-volume'].value = Settings.musicVolume;
+            optionsForm.elements['music-volume-slider'].value = Settings.musicVolume;
+            optionsForm.elements['sfx-volume'].value = Settings.sfxVolume;
+            optionsForm.elements['sfx-volume-slider'].value = Settings.sfxVolume;
+            optionsForm.elements['enable-history'].checked = Settings.historyEnabled;
+            optionsForm.elements['history-size'].value = Settings.historySize;
+            optionsForm.elements['enable-debug'].checked = Settings.debugEnabled;
+            optionsForm.elements['enable-darkmode'].checked = Settings.darkMode;
+
+            $backdrop.removeClass("hidden");
+        });
+
+        $('.options-menu-content .close-btn').on('click', (e) => {
+            $backdrop.addClass("hidden");
+        });
+    }
+
+    $backButton.prop('title', GameHistory.noGoBackReason());
+
+    GameUI.setDarkMode(Settings.darkMode);
+
     receivedText();
 });
 
@@ -487,17 +648,34 @@ function handleFileSave(bQuick, bNew, CurID, oldSaveName) {
     }
 }
 
-function handleFileSelect(bQuick, CurID) {
+function handleFileSelect(bQuick, CurID, rsvRoot) {
+    if(rsvRoot !== undefined) bQuick = false;
+
     var desiredId = bQuick ? 0 : CurID;
-    var savedGame = SavedGames.getSave(desiredId);
+    var savedGame = rsvRoot !== undefined ? {} : SavedGames.getSave(desiredId);
+
+    GameController.reset();
+    CommandLists.reset();
+    GameHistory.reset();
+    Globals.movingDirection = "";
 
     TheGame = SetupGameDataWithMap();
     GameUI.setGameTitle();
-    SavedGames.applySaveToGame(TheGame, savedGame);
+
+    if(rsvRoot !== undefined) {
+        SavedGames.applyRsvToGame(TheGame, rsvRoot);
+    } else {
+        SavedGames.applySaveToGame(TheGame, savedGame);
+    }
+
     if (savedGame.cheatFreezes) {
         window.cheatFreezes = savedGame.cheatFreezes;
     }
-    RoomChange(false, false);
+    RoomChange(false, false, true);
+    if(savedGame.currentImage !== undefined) {
+        // This must be done after the call to RoomChange() because it changes the image
+        showImage(savedGame.currentImage);
+    }
     UpdateStatusBars();
     SetPortrait(TheGame.Player.PlayerPortrait);
     $("#playernamechoice").css("visibility", "hidden");
@@ -507,7 +685,17 @@ function handleFileSelect(bQuick, CurID) {
     $("#selectionmenu").css("visibility", "hidden");
     $("#genderchoice").css("visibility", "hidden");
     $("#cmdinputmenu").css("visibility", "hidden");
+    $("#Continue").css("background-color", "rgb(128, 128, 128)");
+    $("#Continue").css('visibility', "hidden");
+    $("#back").prop('disabled', true)
+            .prop('title', GameHistory.noGoBackReason());
     GameUI.showGameElements();
+
+    if (TheGame.bgMusic !== undefined && TheGame.bgMusic.length > 0) {
+        GameUI.playBgMusic(imagePath(TheGame.bgMusic));
+    } else {
+        GameUI.playBgMusic(null);
+    }
 
     if (bQuick) {
         GameUI.showMessage('Quick Loaded', {type: 'success', timeout: 3.0});
@@ -544,6 +732,7 @@ function retrieveExportData() {
 
 function SetupGameDataWithMap() {
     const gameData = SetupGameData();
+    if(gameData.TurnCount === undefined) gameData.TurnCount = 0;
     Finder.addMaps(gameData);
     return gameData;
 }
@@ -579,7 +768,13 @@ function StartGame() {
         ChangeRoom(currentroom, true, true);
     }
     SetPortrait(TheGame.Player.PlayerPortrait);
-    GameActions.runEvents("<<On Game Start>>", function () {}); // TODO
+    GameActions.runEvents("<<On Game Start>>", function () {
+        if (TheGame.bgMusic !== undefined && TheGame.bgMusic.length > 0) {
+            GameUI.playBgMusic(imagePath(TheGame.bgMusic));
+        } else {
+            GameUI.playBgMusic(null);
+        }
+    });
 }
 
 function GetImageMimeType(lastthree) {

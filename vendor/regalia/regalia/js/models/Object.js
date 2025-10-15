@@ -27,6 +27,35 @@
     this.bEnterFirstTime = false;
     this.bLeaveFirstTime = false;
     this.bImportant = false;
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            locationtype: this.locationtype,
+            locationname: this.locationname,
+            name: this.name,
+            description: this.description,
+            sdesc: this.sdesc,
+            preposition: this.preposition,
+            Actions: ArrayCloneForDiff(this.Actions),
+            CustomProperties: ArrayCloneForDiff(this.CustomProperties),
+            bCarryable: this.bCarryable,
+            bWearable: this.bWearable,
+            bOpenable: this.bOpenable,
+            bLockable: this.bLockable,
+            bEnterable: this.bEnterable,
+            bReadable: this.bReadable,
+            bContainer: this.bContainer,
+            dWeight: this.dWeight,
+            bWorn: this.bWorn,
+            bLocked: this.bLocked,
+            bOpen: this.bOpen,
+            bVisible: this.bVisible,
+            bEnterFirstTime: this.bEnterFirstTime,
+            bLeaveFirstTime: this.bLeaveFirstTime,
+            bImportant: this.bImportant,
+        };
+    };
 }
 
 function SetupObjectData(GameData) {

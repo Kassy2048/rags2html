@@ -2,6 +2,13 @@
 function customproperty() {
     this.Name = "";
     this.Value = "";
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            Value: this.Value,
+        };
+    };
 }
 
 function SetupCustomPropertyData(GameData) {

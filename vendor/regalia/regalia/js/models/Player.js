@@ -14,6 +14,19 @@ function player() {
     this.bEnforceWeight = false;
     this.dWeightLimit = 100.5;
     this.CustomProperties = [];
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            Name: this.Name,
+            Description: this.Description,
+            CurrentRoom: this.CurrentRoom,
+            PlayerGender: this.PlayerGender,
+            PlayerPortrait: this.PlayerPortrait,
+            Actions: ArrayCloneForDiff(this.Actions),
+            CustomProperties: ArrayCloneForDiff(this.CustomProperties),
+        };
+    };
 }
 
 function SetupPlayerData(GameData) {

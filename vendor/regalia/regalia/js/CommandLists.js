@@ -37,6 +37,10 @@ var CommandLists = {
         this.stack[0].commands.push(command);
     },
 
+    getCurrentStack: function() {
+        return this.stack[0];
+    },
+
     setAdditionalData: function (additionalData) {
         for (var i = 0; i < this.stack.length; i++) {
             if (this.stack[i].act) {
@@ -90,5 +94,11 @@ var CommandLists = {
                 return;
             }
         }
-    }
+    },
+
+    reset: function() {
+        this.stack = [
+            {obj: null, act: null, autoShift: false, commands: []},
+        ];
+    },
 };

@@ -3,17 +3,27 @@ var GameConditions = {
         var bResult = true;
         var counter = 0;
 
+        function loopArgsCommand() {
+            const cmd = new command();
+            cmd.cmdtype = "CT_REGALIA_LOOPARGS";
+            // Using a copy so that changes to Globals.loopArgs won't change the command values
+            cmd.CustomChoices.push(Object.assign({}, Globals.loopArgs));
+            return cmd;
+        }
+
         function performLoopIteration() {
             if (Globals.loopArgs.idx < Globals.loopArgs.array.length) {
                 Globals.loopArgs.object = Globals.loopArgs.array[Globals.loopArgs.idx];
                 Globals.loopArgs.idx++;
 
-                GameCommands.insertToMaster([tempcond]);
+                GameCommands.insertToMaster([loopArgsCommand(), tempcond]);
                 GameCommands.insertToMaster(tempcond.PassCommands);
             } else {
                 Logger.logEvaluatedCondition(tempcond, bResult);
-                ResetLoopObjects();
+                RestoreLoopObject();
             }
+
+            Globals.loopArgsValid = false;
         }
 
         for (var i = 0; i < tempcond.Checks.length; i++) {
@@ -38,21 +48,29 @@ var GameConditions = {
                 switch (tempcheck.CondType) {
                     case "CT_Loop_While": {
                         if (this.testVariable(step2, step3, step4)) {
-                            GameCommands.insertToMaster([tempcond]);
+                            GameCommands.insertToMaster([loopArgsCommand(), tempcond]);
                             GameCommands.insertToMaster(tempcond.PassCommands);
                         } else {
                             Logger.logEvaluatedCondition(tempcond, bResult);
+                            RestoreLoopObject();
                         }
+                        Globals.loopArgsValid = false;
                         break;
                     }
                     case "CT_Loop_Rooms": {
-                        if (Globals.loopArgs.array == null)
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
                             Globals.loopArgs.array = TheGame.Rooms;
+                        }
                         performLoopIteration();
                         break;
                     }
                     case "CT_Loop_Exits": {
-                        if (Globals.loopArgs.array == null) {
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
+
                             var temproom = Finder.room(step2);
                             if (temproom != null) {
                                 Globals.loopArgs.array = temproom.Exits;
@@ -62,22 +80,27 @@ var GameConditions = {
                         break;
                     }
                     case "CT_Loop_Characters": {
-                        if (Globals.loopArgs.array == null)
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
                             Globals.loopArgs.array = TheGame.Characters;
+                        }
                         performLoopIteration();
                         break;
                     }
                     case "CT_Loop_Item_Group": {
-                        if (Globals.loopArgs.array == null) {
-                            Globals.loopArgs.array = TheGame.Objects.filter(function (item) {
-                                return item.GroupName === step2;
-                            });
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
+                            Globals.loopArgs.array = Finder.objectGroup(step2);
                         }
                         performLoopIteration();
                         break;
                     }
                     case "CT_Loop_Item_Char_Inventory": {
-                        if (Globals.loopArgs.array == null) {
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
                             Globals.loopArgs.array = TheGame.Objects.filter(function (item) {
                                 return item.locationtype === "LT_CHARACTER" && item.locationname === step2;
                             });
@@ -86,7 +109,9 @@ var GameConditions = {
                         break;
                     }
                     case "CT_Loop_Item_Container": {
-                        if (Globals.loopArgs.array == null) {
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
                             Globals.loopArgs.array = TheGame.Objects.filter(function (item) {
                                 return item.locationtype === "LT_IN_OBJECT" && item.locationname === step2;
                             });
@@ -95,7 +120,9 @@ var GameConditions = {
                         break;
                     }
                     case "CT_Loop_Item_Inventory": {
-                        if (Globals.loopArgs.array == null) {
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
                             Globals.loopArgs.array = TheGame.Objects.filter(function (item) {
                                 return item.locationtype === "LT_PLAYER";
                             });
@@ -104,7 +131,9 @@ var GameConditions = {
                         break;
                     }
                     case "CT_Loop_Item_Room": {
-                        if (Globals.loopArgs.array == null) {
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
                             Globals.loopArgs.array = TheGame.Objects.filter(function (item) {
                                 return item.locationtype === "LT_ROOM" && item.locationname === step2;
                             });
@@ -113,7 +142,9 @@ var GameConditions = {
                         break;
                     }
                     case "CT_Loop_Items": {
-                        if (Globals.loopArgs.array == null) {
+                        if (!Globals.loopArgsValid) {
+                            // First iteration
+                            ResetLoopObjects(true);
                             Globals.loopArgs.array = TheGame.Objects;
                         }
                         performLoopIteration();
@@ -121,6 +152,10 @@ var GameConditions = {
                     }
                     default: {
                         bResult = this.booleanConditionResult(tempcond, tempcheck, step2, step3, step4, objectBeingActedUpon, conditionAction);
+                    }
+
+                    if(Settings.debugEnabled) {
+                        console.debug(tempcheck.CondType, step2, step3, step4, objectBeingActedUpon, bResult);
                     }
                 }
             } catch (err) {

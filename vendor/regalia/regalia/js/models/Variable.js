@@ -11,6 +11,17 @@
     this.VarComment = "";
     this.VarArray = [];
     this.CustomProperties = [];
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            dNumType: this.dNumType,
+            sString: this.sString,
+            dtDateTime: this.dtDateTime,
+            VarArray: this.VarArray === null ? null : ArrayCloneForDiff(this.VarArray),
+            CustomProperties: ArrayCloneForDiff(this.CustomProperties),
+        };
+    };
 }
 
 function SetupVariableData(RoomData) {

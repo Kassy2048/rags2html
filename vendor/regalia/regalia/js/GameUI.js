@@ -1,8 +1,17 @@
 var GameUI = {
+    saveDisabled: false,
+
     setGameTitle: function () {
         var title = GameController.title();
-        document.title = title;
+        if (TheGame.GameVersion !== undefined && TheGame.GameVersion.length > 0) {
+            version = ' (' + TheGame.GameVersion + ')';
+        } else {
+            version = '';
+        }
+
+        document.title = title + version;
         $('.game-title').text(title);
+        $('.game-version').text(version);
     },
 
     setDefaultCompass: function () {
@@ -37,11 +46,15 @@ var GameUI = {
     },
 
     disableSaveAndLoad: function () {
-        $('#save').prop('disabled', true);
+        this.saveDisabled = true;
+        $('#back').prop('disabled', true)
+                .prop('title', 'Cannot go back now');
     },
 
     enableSaveAndLoad: function () {
-        $('#save').prop('disabled', false);
+        this.saveDisabled = false;
+        $('#back').prop('disabled', !GameHistory.canGoBack())
+            .prop('title', GameHistory.noGoBackReason());
     },
 
     clearInputChoices: function () {
@@ -163,6 +176,7 @@ var GameUI = {
                     });
                     $("#selectionmenu").css("visibility", "hidden");
                     ResetLoopObjects();
+                    TheGame.TurnCount++;
                     GameActions.processAction(selectionchoice, false, obj);
                     GameUI.onInteractionResume();
                 });
@@ -397,7 +411,6 @@ var GameUI = {
     },
 
     onInteractionResume: function() {
-        //console.warn('onInteractionResume');
         const MainText = $("#MainText");
         const scrollHeight = MainText[0].scrollHeight;
         if(this.lastScrollHeight != scrollHeight) {
@@ -408,6 +421,12 @@ var GameUI = {
                 }, 0);
             }
             this.lastScrollHeight = MainText[0].scrollHeight;
+        }
+
+        if(GameController.shouldRunCommands()) {
+            GameHistory.pushState();
+            $('#back').prop('disabled', !GameHistory.canGoBack())
+                    .prop('title', GameHistory.noGoBackReason());
         }
     },
 
@@ -449,6 +468,174 @@ var GameUI = {
             window.setTimeout(() => {
                 $message.remove();
             }, params.timeout * 1000.0);
+        }
+    },
+
+    // Dark color conversion cache
+    darkColorMap: {},
+    darkColorElement: null,
+
+    /** Convert the given color to use in dark mode.
+     * The color is converted to HSL and the lightness component is inverted to
+     * produce the dark mode color.
+     */
+    getDarkColor: function(color) {
+        color = color.trim();
+
+        // Use value from cache if available
+        let result = this.darkColorMap[color];
+        if(result !== undefined) return result;
+
+        // Convert CSS color to rgb(a) color
+        if(this.darkColorElement === null) {
+            this.darkColorElement = document.createElement('div');
+            this.darkColorElement.id = 'dark-color-element';
+            this.darkColorElement.style.display = 'none';
+            document.body.appendChild(this.darkColorElement);
+        }
+
+        this.darkColorElement.style.color = color;
+        const rgbColor = window.getComputedStyle(this.darkColorElement).color;
+
+        // Parse the color
+        const m = rgbColor.match(/^rgb(a)?\s*\(\s*([^\)]+)\s*\)/);
+        if(!m) {
+            console.warn('Cannot parse color "' + color + '" (' + rgbColor + ')');
+            return color;
+        }
+
+        const hasAlpha = m[1] !== undefined;
+        const rgba = m[2].split(',').map(comp => parseFloat(comp));
+
+        if(rgba.length < 3) {
+            console.warn('Cannot parse color "' + color + '" (' + rgbColor + ')');
+            return color;
+        }
+
+        const rgb = rgba.slice(0, 3);
+
+        // Use value from cache if available
+        let hsl = this.darkColorMap[rgb];
+        if(hsl === undefined) {
+            // Convert to HSL
+            // https://css-tricks.com/converting-color-spaces-in-javascript/
+            function RGBToHSL(r,g,b) {
+                // Make r, g, and b fractions of 1
+                r /= 255;
+                g /= 255;
+                b /= 255;
+
+                // Find greatest and smallest channel values
+                const cmin = Math.min(r,g,b);
+                const cmax = Math.max(r,g,b);
+                const delta = cmax - cmin;
+                let h = 0, s = 0, l = 0;
+
+                // Calculate hue
+                // No difference
+                if (delta == 0) h = 0;
+                // Red is max
+                else if (cmax == r) h = ((g - b) / delta) % 6;
+                // Green is max
+                else if (cmax == g) h = (b - r) / delta + 2;
+                // Blue is max
+                else h = (r - g) / delta + 4;
+
+                h = Math.round(h * 60);
+
+                // Make negative hues positive behind 360°
+                if (h < 0) h += 360;
+
+                // Calculate lightness
+                l = (cmax + cmin) / 2;
+
+                // Calculate saturation
+                s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+
+                // Multiply l and s by 100
+                s = +(s * 100).toFixed(1);
+                l = +(l * 100).toFixed(1);
+
+                return [h, s, l];
+            }
+
+            hsl = RGBToHSL(...rgb);
+            // Invert the lightness
+            hsl[2] = 100 - hsl[2] * 0.65;
+
+            // Cache the conversion from rgb
+            this.darkColorMap[rgb] = hsl;
+        }
+
+        result = 'hsl(' + hsl[0] + ' ' + hsl[1] + ' ' + hsl[2] + ' ' +
+                (hasAlpha ? ('/ ' + rgba[3]) : '') + ')';
+
+        // Cache the conversion from color text
+        this.darkColorMap[color] = result;
+
+        return result;
+    },
+
+    setDarkMode: function(enabled) {
+        if(enabled) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+
+        // Convert the colors in MainText
+        document.querySelectorAll('#MainText span[style^="color:"]').forEach(el => {
+            if(enabled) {
+                if(el.dataset.color === undefined) {
+                    el.dataset.color = el.style.color;
+                    el.style.color = this.getDarkColor(el.style.color);
+                }
+            } else {
+                if(el.dataset.color !== undefined) {
+                    el.style.color = el.dataset.color;
+                    delete el.dataset.color;
+                }
+            }
+        });
+    },
+
+    bgMusicTimer: -1,
+
+    playBgMusic: function(path) {
+        const mplayer = $("#BGMusic")[0];
+        if(path === null) {
+            // Stop
+            mplayer.pause();
+        } else {
+            let volume = 0;
+            mplayer.volume = 0;
+
+            $("#bgmusicsource").attr("src", path);
+            mplayer.load();
+            mplayer.play();
+
+            // Fade-in effect
+            clearInterval(this.bgMusicTimer);
+            this.bgMusicTimer = setInterval(function() {
+                if(volume >= Settings.musicVolume) {
+                    clearInterval(GameUI.bgMusicTimer);
+                } else {
+                    ++volume;
+                    mplayer.volume = volume / 100;
+                }
+            }, 15);
+        }
+    },
+
+    playSoundEffect: function(path) {
+        const mplayer = $("#SoundEffect")[0];
+        if(path === null) {
+            // Stop (unused)
+            mplayer.pause();
+        } else {
+            mplayer.src = path;
+            mplayer.load();
+            mplayer.play();
         }
     },
 };

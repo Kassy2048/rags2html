@@ -10,8 +10,10 @@ var Globals = {
     loopArgs: {
         object: null,
         idx: 0,
-        array: null
+        array: null,
+        prevObject: null
     },
+    loopArgsValid: false,
     inputDataObject: null,
     movingDirection: "",
     runningLiveTimerCommands: false,
@@ -20,10 +22,17 @@ var Globals = {
     variableGettingSet: null
 };
 
-function ResetLoopObjects() {
+function ResetLoopObjects(backup) {
     Globals.loopArgs = {
         array: null,
         idx: 0,
-        object: null
+        object: null,
+        prevObject: backup ? Globals.loopArgs.object : null
     };
+    Globals.loopArgsValid = false;
+}
+
+function RestoreLoopObject() {
+    Globals.loopArgs.object = Globals.loopArgs.prevObject;
+    Globals.loopArgs.prevObject = null;
 }

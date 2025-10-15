@@ -22,7 +22,6 @@ body {
 
 #menu {
     top: 0;
-    height: 30px;
     display: inline-block;
     flex: 0 0 auto;
 }
@@ -96,11 +95,16 @@ body {
 #menu {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    padding: 5px 20px;
 }
 
 .menuitem {
-    padding: 0 20px;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+}
+
+.game-version {
+    font-size: small;
 }
 
 /* playerrow */
@@ -197,7 +201,7 @@ body {
 }
 
 #RoomThumbImg.has-actions, #PlayerImg.has-actions {
-    border: 2px solid green;
+    border: 2px solid var(--theme-green);
     cursor: pointer;
 }
 
@@ -211,8 +215,10 @@ body {
     right: 0;
 }
 
-#MainVideo {
+#MainVideo,
+#MainVideo video {
     width: 100%;
+    height: 100%;
 }
 
 #RoomThumbImg, .RoomLayeredImage,
@@ -241,7 +247,7 @@ body {
 
 #inputmenu, #cmdinputmenu, #playernamechoice, #genderchoice, #textchoice, #textactionchoice {
     position: absolute;
-    background-color: white;
+    background-color: var(--main-bg-color);
     border: 1px solid grey;
     visibility: hidden;
     left: 0;
@@ -249,6 +255,7 @@ body {
     bottom: 0;
     opacity: 0.8;
     text-align: left;
+    max-height: 100%;
 }
 
 #inputmenu:not(.cancellable) #CancelInput {
@@ -316,8 +323,8 @@ body {
 }
 
 #inputchoices .inputchoices:hover, #cmdinputchoices .inputchoices:hover {
-    background-color: #b5b5b5;
-    color: black;
+    background-color: var(--popup-bg-color);
+    color: var(--main-text-color);
 }
 
 #CancelInput, #cmdCancelInput {
@@ -331,7 +338,7 @@ body {
 #Actionchoices .ActionChoices:not(.no-actions):hover
 {
     cursor: pointer;
-    background-color: #b5b5b5;
+    background-color: var(--popup-bg-color);
 }
 
 .RoomObjects, .VisibleCharacters {
@@ -418,8 +425,8 @@ body {
     cursor: pointer;
     visibility: visible;
     /* opacity: 0.5; */
-    /* background-color: green; */
-    border: 1px solid black;
+    /* background-color: var(--theme-green); */
+    border: 1px solid var(--main-text-color);
     font-weight: bold;
     display: flex;
     text-align: center;
@@ -427,6 +434,10 @@ body {
     flex-direction: column;
     /* Only make the background transparent, not the text */
     background-color: rgba(0, 128, 0, 0.6);
+}
+
+.dark-mode .compass-direction.active {
+    background-color: rgba(128, 255, 128, 0.6);
 }
 
 .compass-direction.active:hover {
@@ -453,7 +464,7 @@ body {
     padding: 15px;
     position: fixed;
     border: 1px solid grey;
-    background: white;
+    background: var(--main-bg-color);
     display: flex;
     flex-direction: column;
 }
@@ -478,6 +489,10 @@ body {
 
 .import-menu-content input {
     margin: 20px 0;
+}
+
+.import-menu-status {
+    margin-bottom: 5px;
 }
 
 .cheat-menu-title, .cheat-menu-subtitle {
@@ -515,14 +530,19 @@ body {
     background-color: #00e7ff;
 }
 
+.dark-mode .freeze-button.frozen {
+    /* No change, lightness is 50% */
+    background-color: #00e7ff;
+}
+
 .live-timer-display {
-    background-color: white;
+    background-color: var(--main-bg-color);
     z-index: 1;
     position: absolute;
     right: 0;
     bottom: 0;
-    border-top: 2px solid black;
-    border-left: 2px solid black;
+    border-top: 2px solid var(--main-text-color);
+    border-left: 2px solid var(--main-text-color);
 }
 
 .live-timer-display table {
@@ -532,8 +552,12 @@ body {
 .live-timer-display h4 {
     margin: 0;
     background: #ccc;
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid var(--main-text-color);
     padding: 3px;
+}
+
+.dark-mode .live-timer-display h4 {
+    background-color: #333;
 }
 
 .live-timer-display-rows td {
@@ -541,11 +565,75 @@ body {
 }
 
 .live-timer-display-rows tr:hover td {
-    background-color: #b5b5b5;
-    border-color: #b5b5b5;
+    background-color: var(--popup-bg-color);
+    border-color: var(--popup-bg-color);
     cursor: pointer;
 }
 
 .live-timer-display-rows tr:not:last-child td {
     border-bottom: 1px solid grey;
+}
+
+.bad-media {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: gray;
+    color: darkred;
+    z-index: -1;
+    text-align: center;
+}
+
+#sfx_button, #music_button, #history_button {
+    width: 1.6em;
+    height: 1.6em;
+    display: inline-block;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+#sfx_button {
+    /* Remind icons created by doraclub - Flaticon (https://www.flaticon.com/free-icons/remind) */
+    background-image: url('../images/sfx-on.png');
+}
+
+#sfx_button.off {
+    /* Remind icons created by doraclub - Flaticon (https://www.flaticon.com/free-icons/remind) */
+    background-image: url('../images/sfx-off.png');
+}
+
+#music_button {
+    /* Music icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/music) */
+    background-image: url('../images/music-on.png');
+}
+
+#music_button.off {
+    /* Music icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/music) */
+    background-image: url('../images/music-off.png');
+}
+
+#history_button {
+    /* History icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/history) */
+    background-image: url('../images/history-on.png');
+}
+
+#history_button.off {
+    /* History icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/history) */
+    background-image: url('../images/history-off.png');
+}
+
+.RoomObjects,
+.ActionChoices,
+.compass-direction,
+.inputchoices,
+button,
+label {
+    user-select: none;
 }

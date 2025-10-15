@@ -62,5 +62,11 @@ var GameController = {
 
     shouldRunCommands: function () {
         return !(this.gamePaused || this.gameAwaitingInput);
-    }
+    },
+
+    reset: function() {
+        this.gamePaused = false;
+        this.gameAwaitingInput = false;
+        GameUI.enableSaveAndLoad();
+    },
 };

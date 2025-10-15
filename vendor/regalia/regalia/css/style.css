@@ -1,6 +1,21 @@
 ﻿body {
-    background-color: white;
-    color: black;
+    --main-bg-color: white;
+    --main-text-color: black;
+    --popup-bg-color: #b5b5b5;
+    --theme-green: green;
+}
+
+body.dark-mode {
+    --main-bg-color: black;
+    --main-text-color: white;
+    --popup-bg-color: #4a4a4a;
+    --theme-green: #80ff80;
+    /* No need to change these colors: grey/gray, lime, red, blue */
+}
+
+body {
+    background-color: var(--main-bg-color);
+    color: var(--main-text-color);
     min-width: 750px;
     min-height: 500px;
 }
@@ -16,7 +31,7 @@ article {
 p {
     font-size: larger;
     border-style: solid;
-    border-color: Black;
+    border-color: var(--main-text-color);
     border-width: thick;
     width: 50%;
 }
@@ -38,7 +53,7 @@ p {
     font-family: sans-serif;
     font-weight: bold;
     font-size: large;
-    border: 1px solid green;
+    border: 1px solid var(--theme-green);
     vertical-align: top;
     margin-top: 20px;
     margin-left: 7px;
@@ -79,8 +94,9 @@ table {
     width: 100%;
 }
 
-.save-menu-content {
-    background-color: White;
+.save-menu-content,
+.modal-content {
+    background-color: var(--main-bg-color);
     max-height: 80%;
     border: 1px solid grey;
     display: flex;
@@ -89,11 +105,13 @@ table {
     margin-top: 40px;  /* menu height + 10 px */
 }
 
-.save-menu-content h3 {
+.save-menu-content h3,
+.modal-content h3 {
     margin: 0 0 4px 0;
 }
 
-.save-menu-content  > * {
+.save-menu-content > *,
+.modal-content > * {
     flex: 0 0 auto;
 }
 
@@ -101,9 +119,21 @@ table {
     flex: 1 1 auto;
 }
 
-.savegames-header {
-    padding: 8px;
+.savegames-header,
+.modal-header,
+.modal-body,
+.modal-footer {
+    margin: 8px;
     flex: 0 0 auto;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--main-text-color);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-evenly;
 }
 
 .btn {
@@ -128,6 +158,25 @@ table {
 .btn.btn-danger:hover {
     background: #d47979;
 }
+
+.dark-mod {
+    .btn {
+        background: #2c2c2c;
+    }
+
+    .btn:hover {
+        background: #555;
+    }
+
+    .btn.btn-danger {
+        background: #4b0000;
+    }
+
+    .btn.btn-danger:hover {
+        background: #862B2B;
+    }
+}
+
 
 .savegames-header button {
     margin-top: 4px;
@@ -166,7 +215,7 @@ td {
 #selectionmenu {
     z-index: 100;
     position: absolute;
-    background-color: White;
+    background-color: var(--main-bg-color);
     min-width: 200px;
     max-width: 300px;
     max-height: 300px;
@@ -236,7 +285,7 @@ td {
     position: absolute;
     width: auto;
     height: 25px;
-    background-color: white;
+    background-color: var(--main-bg-color);
     visibility: hidden;
 }
 
@@ -272,6 +321,20 @@ td {
     background-color: rgba(128, 255, 128, 0.8);
 }
 
+.dark-mode {
+    #MessagePane .message.error {
+        background-color: rgba(128, 0, 0, 0.8);
+    }
+
+    #MessagePane .message.warning {
+        background-color: rgba(159, 95, 0, 0.8);
+    }
+
+    #MessagePane .message.success {
+        background-color: rgba(0, 128, 0, 0.8);
+    }
+}
+
 #MessagePane .message-text {
     text-align: center;
 }
@@ -282,7 +345,7 @@ td {
 
 #MessagePane .message-close::after {
     content: 'X';
-    color: white;
+    color: var(--main-bg-color);
     margin-left: 1em;
     font-size: smaller;
     cursor: pointer;
@@ -291,4 +354,27 @@ td {
 
 #MessagePane .message-close:hover::after {
     opacity: 1.0;
+}
+
+#options-form {
+    display: flex;
+    flex-direction: column;
+}
+
+#options-form input[name$="-volume"] {
+    width: 3.5em;
+}
+
+#options-form input[name="history-size"] {
+    width: 4em;
+}
+
+#options-form input[type="checkbox"] {
+    margin-left: 0;
+}
+
+#options-form label {
+    padding-left: 3px;
+    display: flex;
+    gap: 0.25em;
 }

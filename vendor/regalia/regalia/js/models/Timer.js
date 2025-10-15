@@ -11,6 +11,20 @@ function timer() {
     this.CustomProperties = [];
     this.Actions = [];
     this.curtickcount = 0;
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            TType: this.TType,
+            Active: this.Active,
+            TurnNumber: this.TurnNumber,
+            Length: this.Length,
+            LiveTimer: this.LiveTimer,
+            TimerSeconds: this.TimerSeconds,
+            CustomProperties: ArrayCloneForDiff(this.CustomProperties),
+            Actions: ArrayCloneForDiff(this.Actions),
+        };
+    };
 }
 
 function SetupTimerData(GameData) {

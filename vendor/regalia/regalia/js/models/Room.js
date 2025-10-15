@@ -11,6 +11,22 @@
     this.bEnterFirstTime = false;
     this.bLeaveFirstTime = false;
     this.UniqueID = "";
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            Description: this.Description,
+            SDesc: this.SDesc,
+            Name: this.Name,
+            Exits: ArrayCloneForDiff(this.Exits),
+            Actions: ArrayCloneForDiff(this.Actions),
+            CustomProperties: ArrayCloneForDiff(this.CustomProperties),
+            RoomPic: this.RoomPic,
+            //LayeredRoomPic: this.LayeredRoomPic,
+            bEnterFirstTime: this.bEnterFirstTime,
+            bLeaveFirstTime: this.bLeaveFirstTime,
+        };
+    };
 }
 
 function SetupRoomData(RoomData) {

@@ -378,9 +378,9 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             }
                         case "LENGTH":
                             {
-                                text = text.slice(0, tempindex) + tempobject.length + text.slice(tempindex);
+                                text = text.slice(0, tempindex) + tempobject.Length + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.length = parseInt(replacementvalue);
+                                    tempobject.Length = parseInt(replacementvalue);
                                 }
                                 break;
                             }
@@ -404,7 +404,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.LiveTimer + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.LiveTimer = (replacementValue.toLowerCase() == "true");
+                                    tempobject.LiveTimer = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -489,7 +489,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bEnterFirstTime + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bEnterFirstTime = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bEnterFirstTime = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -497,7 +497,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bLeaveFirstTime + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bLeaveFirstTime = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bLeaveFirstTime = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -524,7 +524,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                                     if (parts[3].toUpperCase() == "ACTIVE") {
                                         text = text.slice(0, tempindex) + tempexit.bActive + text.slice(tempindex);
                                         if (bReplacement) {
-                                            tempexit.bActive = (replacementValue.toLowerCase() == "true");
+                                            tempexit.bActive = (replacementvalue.toLowerCase() == "true");
                                         }
                                     } else if (parts[3].toUpperCase() == "DESTINATIONID") {
                                         text = text.slice(0, tempindex) + tempexit.DestinationRoom + text.slice(tempindex);
@@ -589,7 +589,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bImportant + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bImportant = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bImportant = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -597,7 +597,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bCarryable + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bCarryable = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bCarryable = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -605,7 +605,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bWearable + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bWearable = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bWearable = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -613,7 +613,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bWorn + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bWorn = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bWorn = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -621,7 +621,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bContainer + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bContainer = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bContainer = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -629,7 +629,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bOpenable + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bOpenable = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bOpenable = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -637,7 +637,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bOpen + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bOpen = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bOpen = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -645,7 +645,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bLockable + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bLockable = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bLockable = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -653,7 +653,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bLocked + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bLocked = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bLocked = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -661,7 +661,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bVisible + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bVisible = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bVisible = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -669,7 +669,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bEnterable + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bEnterable = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bEnterable = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -677,7 +677,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bReadable + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bReadable = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bReadable = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -731,7 +731,7 @@ function ReplaceAttribute(AttType, text, tempindex, replacementvalue) {
                             {
                                 text = text.slice(0, tempindex) + tempobject.bAllowInventoryInteraction + text.slice(tempindex);
                                 if (bReplacement) {
-                                    tempobject.bAllowInventoryInteraction = (replacementValue.toLowerCase() == "true");
+                                    tempobject.bAllowInventoryInteraction = (replacementvalue.toLowerCase() == "true");
                                 }
                                 break;
                             }
@@ -815,7 +815,7 @@ function GetActionData(tempact, part3, text, tempindex, replacementvalue) {
             {
                 text = text.slice(0, tempindex) + tempact.bActive + text.slice(tempindex);
                 if (bReplacement) {
-                    tempact.bActive = (replacementValue.toLowerCase() == "true");
+                    tempact.bActive = (replacementvalue.toLowerCase() == "true");
                 }
                 break;
             }
@@ -863,7 +863,7 @@ function ReplaceStatic(text, tempindex, change, loopobject) {
             return TheGame.Player.dWeightLimit;
         },
         '[TURNS]', function () {
-            return TurnCount;
+            return TheGame.TurnCount;
         },
         '[CURRENTCARRY]', function () {
             var totalweight = 0;

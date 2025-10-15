@@ -4,6 +4,15 @@ function exit() {
     this.bActive = false;
     this.DestinationRoom = "";
     this.PortalObjectName = "<None>";
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            bActive: this.bActive,
+            DestinationRoom: this.DestinationRoom,
+            PortalObjectName: this.PortalObjectName,
+        };
+    };
 }
 
 function SetupExitData(GameData) {

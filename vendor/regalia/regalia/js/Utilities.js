@@ -164,6 +164,11 @@ function showImage(ImageName) {
     renderMainImageAndLayers();
 }
 
+const supportedMediaFormats = new Set([
+    'mp4', 'webm',
+    'gif', 'jpg', 'jpeg', 'webp', 'png',
+    'bmp', 'ico', 'svg',
+]);
 function renderMainImageAndLayers() {
     $("#MainImageLayers").empty();
 
@@ -179,8 +184,28 @@ function renderMainImageAndLayers() {
     ImageRecorder.sawImage(Globals.currentImage);
     var fileParts = Globals.currentImage.split('.');
     var fileExtension = fileParts[fileParts.length - 1].toLowerCase();
-    if (fileExtension === 'mp4' || fileExtension === 'webm') {
-        var $videoTag = $('<video autoplay controls width="100%"><source src="' + imagePath(Globals.currentImage) + '" type="video/' + fileExtension + '">Sorry, your browser doesn\'t support this video.</video>');
+    if (!supportedMediaFormats.has(fileExtension) && Globals.currentImage !== '') {
+        // Try to load the media as an image and show an error message if that fails
+        $("#MainVideo").empty();
+        const ImageName = Globals.currentImage;
+        const img = new Image();
+        img.addEventListener('load', () => {
+            if(ImageName === Globals.currentImage) {
+                $("#MainImg").css("background-image", imageUrl(Globals.currentImage));
+            }
+        });
+        img.addEventListener('error', () => {
+            if(ImageName === Globals.currentImage) {
+                $("#MainVideo").append($('<div class="bad-media">' + Globals.currentImage
+                        + '<br/>Playing this file is not supported</div>'));
+                $("#MainImg").css("background-image", "");
+            }
+        });
+        img.src = imagePath(Globals.currentImage);
+    } else if (fileExtension === 'mp4' || fileExtension === 'webm') {
+        var $videoTag = $('<video autoplay controls width="100%"><source src="'
+                + imagePath(Globals.currentImage) + '" type="video/'
+                + fileExtension + '">Sorry, your browser doesn\'t support this video.</video>');
 
         $("#MainVideo").empty();
         $("#MainVideo").append($videoTag);
@@ -285,7 +310,9 @@ function runAfterPause(runNextPhase) {
     }
 }
 
-function ChangeRoom(currentRoom, bRunTimerEvents, bRunEvents) {
+function ChangeRoom(currentRoom, bRunTimerEvents, bRunEvents, bQuiet) {
+    if(bQuiet === undefined) bQuiet = false;
+
     var commandList = CommandLists.startNestedCommandList();
     var desiredRoomId = currentRoom.UniqueID;
     if (currentRoom == null)
@@ -294,7 +321,7 @@ function ChangeRoom(currentRoom, bRunTimerEvents, bRunEvents) {
     SetRoomThumb(currentRoom.RoomPic);
     showImage(currentRoom.RoomPic);
     TheGame.Player.CurrentRoom = currentRoom.UniqueID;
-    if (Globals.movingDirection) {
+    if (!bQuiet && Globals.movingDirection) {
         $("#MainText").append('</br><b>' + Globals.movingDirection + "</b>");
     }
     if (bRunEvents && !currentRoom.bEnterFirstTime) {
@@ -327,15 +354,17 @@ function ChangeRoom(currentRoom, bRunTimerEvents, bRunEvents) {
                     $("#MainText").animate({
                         scrollTop: $("#MainText")[0].scrollHeight
                     });
-                    AddTextToRTF(currentRoom.Description, "Black", "Regular");
-                    $("#MainText").animate({
-                        scrollTop: $("#MainText")[0].scrollHeight
-                    }, 0);
+                    if(!bQuiet) {
+                        AddTextToRTF(currentRoom.Description, "Black", "Regular");
+                        $("#MainText").animate({
+                            scrollTop: $("#MainText")[0].scrollHeight
+                        }, 0);
+                    }
                     ActionRecorder.roomEntered(roomDisplayName(currentRoom));
                     if (bRunTimerEvents)
                         GameTimers.runTimerEvents();
                     GameUI.refreshPanelItems();
-                    if ($("#RoomThumb").css("visibility") != "hidden")
+                    if ($("#RoomThumbImg").css("visibility") != "hidden")
                         SetExits();
                     SetBorders();
                 });
@@ -344,9 +373,9 @@ function ChangeRoom(currentRoom, bRunTimerEvents, bRunEvents) {
     }
 }
 
-function RoomChange(bRunTimerEvents, bRunEvents) {
+function RoomChange(bRunTimerEvents, bRunEvents, bQuiet) {
     var currentroom = Finder.room(TheGame.Player.CurrentRoom);
-    ChangeRoom(currentroom, bRunTimerEvents, bRunEvents);
+    ChangeRoom(currentroom, bRunTimerEvents, bRunEvents, bQuiet);
 }
 
 function SetExits() {
@@ -402,12 +431,19 @@ function AddTextToRTF(text, clr, fontst) {
         // [c Green]green text[/c]
         replacedtext = replacedtext.replace(/\[c\s*([^\]]+)]/gi, function (match, colortype) {
             var colorinserter = "<span style='color:";
+            let cssColor;
             if (colortype.indexOf(",") > -1) {
-                colorinserter += "rgb(" + colortype + ");'>";
+                cssColor = "rgb(" + colortype + ")";
             } else {
-                colorinserter += colortype + ";'>";
+                cssColor = colortype;
             }
-            return colorinserter;
+
+            if (Settings.darkMode) {
+                return colorinserter + GameUI.getDarkColor(cssColor) +
+                        ";' data-color='" + cssColor +"'>";
+            } else {
+                return colorinserter + cssColor + ";'>";
+            }
         });
 
         // [f Arial,16]special font[/f]
@@ -514,6 +550,12 @@ function GetArrayIndex(varname, n) {
 }
 
 function getObjectClass(obj) {
+    if (obj instanceof command) return 'command';
+    if (obj instanceof ragscondition) return 'ragscondition';
+    if (obj instanceof action) return 'action';
+
+    if(typeof obj !== "object") return undefined;
+
     if (obj && obj.constructor && obj.constructor.toString) {
         var arr = obj.constructor.toString().match(/function\s*(\w+)/);
         if (arr && arr.length == 2) {
@@ -894,4 +936,41 @@ function GetExit(room, dir) {
         }
     }
     return null;
+}
+
+function ArrayCloneForDiff(array) {
+    const result = new Array(array.length);
+    for(let i = 0 ; i < array.length ; ++i) {
+        const el = array[i];
+        if(el instanceof Object) {
+            if(el.cloneForDiff !== undefined) {
+                result[i] = el.cloneForDiff();
+            } else if(Array.isArray(el)) {
+                // variable.VarArray case
+                result[i] = ArrayCloneForDiff(el);
+            } else {
+                result[i] = el;
+            }
+        } else {
+            result[i] = el;
+        }
+    }
+
+    return result;
+}
+
+function GameCloneForDiff(game) {
+    // Only clone the properties that can change
+    return {
+        Rooms: ArrayCloneForDiff(game.Rooms),
+        Player: game.Player.cloneForDiff(),
+        Characters: ArrayCloneForDiff(game.Characters),
+        Objects: ArrayCloneForDiff(game.Objects),
+        Images: ArrayCloneForDiff(game.Images),
+        Variables: ArrayCloneForDiff(game.Variables),
+        Timers: ArrayCloneForDiff(game.Timers),
+        StatusBarItems: ArrayCloneForDiff(game.StatusBarItems),
+        bgMusic: game.bgMusic,
+        TurnCount: game.TurnCount,
+    };
 }

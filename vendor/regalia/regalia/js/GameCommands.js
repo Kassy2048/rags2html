@@ -1,5 +1,9 @@
 var GameCommands = {
     runSingleCommand: function (commandBeingProcessed, part2, part3, part4, cmdtxt) {
+        if (Settings.debugEnabled) {
+            console.debug(commandBeingProcessed.cmdtype, part2, part3, part4, cmdtxt, commandBeingProcessed);
+        }
+
         var objectBeingActedUpon = CommandLists.objectBeingActedUpon();
         switch (commandBeingProcessed.cmdtype) {
             case "CT_LAYEREDIMAGE_ADD": {
@@ -74,9 +78,7 @@ var GameCommands = {
             case "CT_ITEM_GETRANDOMGROUP": {
                 var tempvar = Finder.variable(part2);
                 if (tempvar != null) {
-                    var items = TheGame.Objects.filter(function (item) {
-                        return item.GroupName === part3;
-                    });
+                    const items = Finder.objectGroup(part3);
                     if (items.length > 0) {
                         tempvar.sString = items[Math.floor(Math.random() * items.length)].name;
                         break;
@@ -88,9 +90,7 @@ var GameCommands = {
             case "CT_MM_GETRANDOMGROUP": {
                 var tempvar = Finder.variable(part2);
                 if (tempvar != null) {
-                    var images = TheGame.Images.filter(function (image) {
-                        return image.GroupName === part3;
-                    });
+                    const images = Finder.imageGroup(part3);
                     if (images.length > 0) {
                         tempvar.sString = images[Math.floor(Math.random() * images.length)].TheName;
                         break;
@@ -124,6 +124,7 @@ var GameCommands = {
                 break;
             }
             case "CT_LOOP_BREAK": {
+                this.exitLoop();
                 return true;
             }
             case "CT_EXPORTVARIABLE": {
@@ -335,6 +336,10 @@ var GameCommands = {
             }
             case "CT_DISPLAYTEXT": {
                 AddTextToRTF(cmdtxt + "</br>", "Black", "Regular");
+                break;
+            }
+            case "CT_DEBUGTEXT": {
+                if (Settings.debugEnabled) console.debug(cmdtxt);
                 break;
             }
             case "CT_ENDGAME": {
@@ -742,7 +747,7 @@ var GameCommands = {
                 if (tempvar != null) {
                     var splits = part3.split(":");
                     var ValueToSet = "";
-                    if (splits.Length == 2) {
+                    if (splits.length == 2) {
                         var roomname = splits[0];
                         var propname = splits[1];
                         var temproom = null;
@@ -1069,6 +1074,10 @@ var GameCommands = {
                 }
                 break;
             }
+            case "CT_SETROOMLAYEREDPIC": {
+                // FIXME Implement it
+                break;
+            }
             case "CT_SETPLAYERPORTRAIT": {
                 TheGame.Player.PlayerPortrait = part2;
                 SetPortrait(part2);
@@ -1090,22 +1099,17 @@ var GameCommands = {
                 break;
             }
             case "CT_MM_SET_BACKGROUND_MUSIC": {
-                var newmusic = "images/" + part2;
-                var mplayer = $("#BGMusic");
-                $("#bgmusicsource").attr("src", newmusic);
-                mplayer[0].load();
-                mplayer[0].play();
+                GameUI.playBgMusic(imagePath(part2));
+                TheGame.bgMusic = part2;
                 break;
             }
             case "CT_MM_STOP_BACKGROUND_MUSIC": {
-                $("#BGMusic")[0].pause();
+                GameUI.playBgMusic(null);
+                TheGame.bgMusic = '';
                 break;
             }
             case "CT_MM_PLAY_SOUNDEFFECT": {
-                var newmusic = "images/" + part2;
-                var mplayer = $("#SoundEffect").attr('src', newmusic)[0];
-                mplayer.load();
-                mplayer.play();
+                GameUI.playSoundEffect(imagePath(part2));
                 break;
             }
             case "CT_MM_SET_UD_COMPASS": {
@@ -1273,7 +1277,6 @@ var GameCommands = {
             }
             case "CT_DISPLAYCHARDESC": {
                 AddTextToRTF(Finder.character(part2).Description + "\r\n", "Black", "Regular");
-                var bfoundanitem = false;
                 break;
             }
             case "CT_MOVECHAR": {
@@ -1427,6 +1430,25 @@ var GameCommands = {
                 GameController.startAwaitingInput();
                 break;
             }
+            case "CT_COMMENT": {
+                break;
+            }
+
+            /* Internal commands (arguments are in CustomChoices) */
+
+            /** This command is put just before a loop condition when this is not
+             * the first iteration in order to set the loop arguments.
+             */
+            case "CT_REGALIA_LOOPARGS": {
+                Globals.loopArgs = commandBeingProcessed.CustomChoices[0];
+                Globals.loopArgsValid = true;
+                // loopArgsValid will be unset by the loop condition
+                break;
+            }
+
+            default: {
+                console.log('Unknown command ' + commandBeingProcessed.cmdtype);
+            }
         }
     },
 
@@ -1479,6 +1501,10 @@ var GameCommands = {
                     alert("Rags can not process the command correctly.  If you are the game author," + " please correct the error in this command:" + commandBeingProcessed.cmdtype);
                 }
             } else {
+                if (Settings.debugEnabled) {
+                    console.debug(commandOrCondition.payload);
+                }
+
                 var nextCommands = this.processCondition(commandOrCondition, loopObj);
                 if (nextCommands) {
                     this.insertToMaster(nextCommands);
@@ -1489,6 +1515,39 @@ var GameCommands = {
         GameUI.refreshRoomObjects();
         SetupStatusBars();
         return bResult;
+    },
+
+    exitLoop: function() {
+        // Find the loop to exit from in the current stack
+        const currentStack = CommandLists.getCurrentStack();
+        let needLoopCond = false;
+        for (const [i, commandOrCondition] of currentStack.commands.entries()) {
+            const payload = commandOrCondition.payload;
+            if (payload instanceof command) {
+                if (payload.cmdtype === 'CT_REGALIA_LOOPARGS') {
+                    // If a loop condition is following, this is the loop we have to exit from
+                    needLoopCond = true;
+                    continue;
+                }
+            } else if (needLoopCond && payload instanceof ragscondition) {
+                if (payload.Checks.length == 1 && isLoopCheck(payload.Checks[0])) {
+                    // Remove all the commands up to the current one (included)
+                    currentStack.commands.splice(0, i + 1);
+                    RestoreLoopObject();
+                    return true;
+                }
+            }
+
+            if (needLoopCond) {
+                console.warn("BUG: no loop condition found after CT_REGALIA_LOOPARGS",
+                        Array.from(currentStack));
+                break;
+            }
+        }
+
+        // No loop to exit from found
+        console.log("BUG: no loop to break from found", Array.from(currentStack));
+        return false;
     },
 
     addToMaster: function (commands) {

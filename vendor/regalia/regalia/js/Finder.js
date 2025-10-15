@@ -136,7 +136,15 @@ var Finder = {
             }
         }
     },
-    /** Add NameMap and UidMap to game arrays to speed up the searches. */
+    objectGroup: function(groupName) {
+        const group = TheGame.Objects.GroupMap[groupName];
+        return group === undefined ? [] : group;
+    },
+    imageGroup: function(groupName) {
+        const group = TheGame.Images.GroupMap[groupName];
+        return group === undefined ? [] : group;
+    },
+    /** Add NameMap, UidMap and GroupMap to game arrays to speed up the searches. */
     addMaps: function(gameData) {
         function buildMap(list, keyFunc, map) {
             if(map === undefined) map = {};
@@ -156,7 +164,7 @@ var Finder = {
 
         function buildNameMap(list, propName, map) {
             return buildMap(list, (item) => {
-                if(propName in item && item[propName]) {
+                if(propName in item /*&& item[propName]*/) {
                     return item[propName].trim().toLowerCase();
                 }
                 return undefined;
@@ -167,6 +175,24 @@ var Finder = {
             return buildMap(list, (item) => {
                 return item[propName];
             }, map);
+        }
+
+        function buildGroupMap(list, propName) {
+            const map = {};
+
+            list.forEach((item) => {
+                const name = item[propName];
+                if(name === undefined || name === '') return;
+
+                const list = map[name];
+                if(list === undefined) {
+                    map[name] = [item];
+                } else {
+                    list.push(item);
+                }
+            });
+
+            return map;
         }
 
         // NameMap: Characters, Characters[].Actions, Characters[].CustomProperties,
@@ -214,5 +240,9 @@ var Finder = {
         // UidMap: Objects, Rooms
         gameData.Objects.UidMap = buildUidMap(gameData.Objects, 'UniqueIdentifier');
         gameData.Rooms.UidMap = buildUidMap(gameData.Rooms, 'UniqueID');
+
+        // GroupMap: Objects, Images
+        gameData.Objects.GroupMap = buildGroupMap(gameData.Objects, 'GroupName');
+        gameData.Images.GroupMap = buildGroupMap(gameData.Images, 'GroupName');
     }
 };

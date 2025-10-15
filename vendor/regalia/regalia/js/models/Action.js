@@ -12,6 +12,18 @@ function action() {
     this.CustomChoices = [];
     this.EnhInputData = new enhinputdata();
     this.CustomChoiceTitle = "";
+
+    this.cloneForDiff = function() {
+        // Only clone the properties that can change
+        return {
+            name: this.name,
+            bActive: this.bActive,
+            overridename: this.overridename,
+            actionparent: this.actionparent,
+            InputType: this.InputType,
+            CustomChoices: ArrayCloneForDiff(this.CustomChoices),
+        };
+    };
 }
 
 function SetupActionData(GameData) {
