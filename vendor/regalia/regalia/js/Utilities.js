@@ -74,16 +74,21 @@ function evalJankyJavascript(str) {
         .replace(new RegExp("<br>", "g"), "\n")
         .replace(new RegExp("&lt;br&gt;", "g"), "<br>");
 
-    // If the last statement of the last line ends in 'var foo = something', get rid of the 'var' assignment
+    // If the last statement starts with 'var foo = something', get rid of the 'var' assignment
     // In the RAGS desktop client, 'var foo = something' seems to return the value of 'something', but
     // in the browser it returns nil. The assignment is inconsequential so let's delete it!
-    var lines = escapedStr.split("\n");
-    var last_line_statements = lines[lines.length - 1].split(/;(?=.)/);
-    last_line_statements[last_line_statements.length - 1] = last_line_statements[last_line_statements.length - 1].replace(/^var\s*[^\s=]+\s*=\s*/, '');
-    lines[lines.length - 1] = last_line_statements.join(';');
-    escapedStr = lines.join("\n");
+    let newExpr = escapedStr.replace(/(;\s*)+$/, '').trim();
+    const stmts = newExpr.split(';');
+    if(newExpr.length > 0 && stmts.length > 0) {
+        let lastStmt = stmts[stmts.length - 1];
+        lastStmt = lastStmt.replace(/^\s*(var|let|const)\s/, '');
+        stmts[stmts.length - 1] = lastStmt;
+        newExpr = stmts.join(';');
+        escapedStr = newExpr;
+    }
 
-    return eval(escapedStr);
+    const result = eval(escapedStr);
+    return result !== undefined ? result : "Null value returned from evaluate.";
 }
 
 function SetBorders() {

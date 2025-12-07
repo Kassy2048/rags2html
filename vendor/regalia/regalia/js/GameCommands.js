@@ -835,7 +835,7 @@ var GameCommands = {
                                 if (curprop.Name == property) {
                                     if (commandBeingProcessed.cmdtype == "CT_ROOM_SET_CUSTOM_PROPERTY_JS") {
                                         var temp = null;
-                                        temp = eval(replacedstring.replace(new RegExp("</br>", "g"), "").replace(new RegExp("<br>", "g"), ""));
+                                        temp = evalJankyJavascript(replacedstring);
                                         replacedstring = temp.toString();
                                     }
                                     SetCustomProperty(curprop, part3, replacedstring);
@@ -862,7 +862,7 @@ var GameCommands = {
                                 if (curprop.Name == property) {
                                     if (commandBeingProcessed.cmdtype == "CT_TIMER_SET_CUSTOM_PROPERTY_JS") {
                                         var temp = null;
-                                        temp = eval(replacedstring.replace(new RegExp("</br>", "g"), "").replace(new RegExp("<br>", "g"), ""));
+                                        temp = evalJankyJavascript(replacedstring);
                                         replacedstring = temp.toString();
                                     }
                                     SetCustomProperty(curprop, part3, replacedstring);
@@ -889,7 +889,7 @@ var GameCommands = {
                                 if (curprop.Name == property) {
                                     if (commandBeingProcessed.cmdtype == "CT_VARIABLE_SET_CUSTOM_PROPERTY_JS") {
                                         var temp = null;
-                                        temp = eval(replacedstring.replace(new RegExp("</br>", "g"), "").replace(new RegExp("<br>", "g"), ""));
+                                        temp = evalJankyJavascript(replacedstring);
                                         replacedstring = temp.toString();
                                     }
                                     SetCustomProperty(curprop, part3, replacedstring);
@@ -922,7 +922,7 @@ var GameCommands = {
                                 if (curprop.Name == property) {
                                     if (commandBeingProcessed.cmdtype == "CT_ITEM_SET_CUSTOM_PROPERTY_JS") {
                                         var temp = null;
-                                        temp = eval(replacedstring.replace(new RegExp("</br>", "g"), "").replace(new RegExp("<br>", "g"), ""));
+                                        temp = evalJankyJavascript(replacedstring);
                                         replacedstring = temp.toString();
                                     }
                                     SetCustomProperty(curprop, part3, replacedstring);
@@ -949,7 +949,7 @@ var GameCommands = {
                                 if (curprop.Name == property) {
                                     if (commandBeingProcessed.cmdtype == "CT_CHAR_SET_CUSTOM_PROPERTY_JS") {
                                         var temp = null;
-                                        temp = eval(replacedstring.replace(new RegExp("</br>", "g"), "").replace(new RegExp("<br>", "g"), ""));
+                                        temp = evalJankyJavascript(replacedstring);
                                         replacedstring = temp.toString();
                                     }
                                     SetCustomProperty(curprop, part3, replacedstring);
@@ -970,7 +970,7 @@ var GameCommands = {
                         if (curprop.Name == property) {
                             if (commandBeingProcessed.cmdtype == "CT_PLAYER_SET_CUSTOM_PROPERTY_JS") {
                                 var temp = null;
-                                temp = eval(replacedstring.replace(new RegExp("</br>", "g"), "").replace(new RegExp("<br>", "g"), ""));
+                                temp = evalJankyJavascript(replacedstring);
                                 replacedstring = temp.toString();
                             }
                             SetCustomProperty(curprop, part3, replacedstring);
