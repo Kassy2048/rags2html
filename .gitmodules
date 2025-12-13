@@ -1,0 +1,4 @@
+[submodule "vendor/regalia"]
+	path = vendor/regalia
+	url = https://github.com/Kassy2048/regalia.git
+	branch = html-dist
