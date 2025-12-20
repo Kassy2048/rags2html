@@ -2152,6 +2152,11 @@ async def process_file(fpath, keys, args, progress=None):
         regalia_path = os.path.join(vendor_path, 'regalia')
         shutil.copytree(regalia_path, out_dir, dirs_exist_ok=True)
 
+        # Remove .git file due to the regalia folder being a Git submodule
+        git_path = os.path.join(out_dir, '.git')
+        if os.path.isfile(git_path):
+            os.remove(git_path)
+
         def copy_missing(src, dst, *args, **kwargs):
             '''Only copy file if target does not exist already'''
             if os.path.exists(dst):
