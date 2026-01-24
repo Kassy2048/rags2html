@@ -16,6 +16,7 @@ import xml.etree.ElementTree as ET
 from enum import Enum
 from types import DynamicClassAttribute
 import asyncio  # Using asyncio for web version
+from copy import deepcopy
 
 import sdf
 from compat import Color, TextFont
@@ -275,6 +276,221 @@ def xml_convert_vararray(data, varType):
     except:
         print_err(data)
         raise
+
+class ActionCode:
+    '''
+    A class used to convert action logic into JS-like code.
+    '''
+    NEXT_ID = 0
+    INTERACTIVE_CMDS = set([
+        'CT_PAUSEGAME', 
+        'CT_SETVARIABLE_NUMERIC_BYINPUT', 
+        'CT_SETVARIABLEBYINPUT'
+    ])
+
+    def __init__(self, action, indent=''):
+        self.action = action
+        self.indent = indent
+
+        self.FailOnFirst = action.get('bConditionFailOnFirst', None)  # v1
+        if self.FailOnFirst is None:
+            self.FailOnFirst = action.get('FailOnFirst', 'False') == 'True'
+
+        self.text = ''
+
+        self.id = ActionCode.NEXT_ID
+        ActionCode.NEXT_ID += 1
+
+        self.generate()
+
+    def incr_indent(self):
+        self.indent += '  '
+
+    def decr_indent(self):
+        self.indent = self.indent[:-2]
+
+    def add_line(self, line=''):
+        if len(line) > 0:
+            self.text += self.indent + line + '\n'
+        else:
+            self.text += '\n'
+
+    @staticmethod
+    def param_quote(value):
+        def repl(m):
+            c = m.group(1)
+            if c == '\n':
+                return r'\n'
+            elif c == "'":
+                return r"\'"
+            elif c == '\t':
+                return r'\t'
+            elif c == '\r':
+                return r'\r'
+
+        return ("'" + re.sub(r"(\n|\r|\t|')", repl, str(value)) + "'")
+
+    def generate(self):
+        # print(self.action)
+        self.text = ''
+
+        Conditions = self.action.get('Conditions', [])
+        PassCommands = self.action.get('PassCommands', [])
+        FailCommands = self.action.get('FailCommands', [])
+
+        if len(Conditions) > 0:
+            self.add_line('let actionPassed = %s;' % ('true' if self.FailOnFirst else 'false'))
+            self.add_line()
+
+            for condition in Conditions:
+                condition = condition.get('Condition', condition)
+                self.add_condition_code(condition, True)
+
+            self.add_line()
+
+            self.add_branch('actionPassed', PassCommands, FailCommands, True)
+
+        elif len(PassCommands) > 0:
+            self.add_commands_code(PassCommands)
+
+        self.text = self.text.rstrip()
+
+    def add_branch(self, testExpr, PassCommands, FailCommands, is_root=False, name=''):
+        # Always show the check if this is not "actionPassed" in case it has side effects
+        if len(PassCommands) > 0 or len(FailCommands) > 0 or testExpr != 'actionPassed':
+            if len(name) > 0:
+                self.add_line('// ' + re.sub(r'[\r\n]', ' ', name))
+
+            self.add_line('if(' + testExpr + ') {')
+            self.incr_indent()
+            self.add_commands_code(PassCommands)
+
+            if is_root and not self.FailOnFirst:
+                if len(PassCommands) > 0:
+                    self.add_line()
+                self.add_line('actionPassed = true;')
+
+            self.decr_indent()
+
+            if len(FailCommands) > 0 or (is_root and self.FailOnFirst):
+                self.add_line('} else {')
+                self.incr_indent()
+                self.add_commands_code(FailCommands)
+
+                if is_root and self.FailOnFirst:
+                    if len(FailCommands) > 0:
+                        self.add_line()
+                    self.add_line('actionPassed = false;')
+
+                self.decr_indent()
+
+            self.add_line('}')
+
+    def add_condition_code(self, condition, is_root=False):
+        Checks = condition.get('Checks', [])
+        PassCommands = condition.get('PassCommands', [])
+        FailCommands = condition.get('FailCommands', [])
+        Name = condition.get('Name', condition.get('conditionname', ''))
+
+        if len(Checks) > 0:
+            code = ''
+
+            for check in Checks:
+                check = check.get('Check', check)
+                CondType = check['CondType']
+                Step2 = check.get('ConditionStep2', check.get('Step2'))
+                Step3 = check.get('ConditionStep3', check.get('Step3'))
+                Step4 = check.get('ConditionStep4', check.get('Step4'))
+
+                if len(code) != 0:
+                    if check['CkType'] == 'Or' or check['CkType'] == 2:
+                        code += ' || '
+                    else:
+                        code += ' && '
+
+                params = []
+                if Step2 is not None:
+                    params.append(self.param_quote(Step2))
+                if Step3 is not None:
+                    params.append(self.param_quote(Step3))
+                if Step4 is not None:
+                    params.append(self.param_quote(Step4))
+
+                if CondType == 'CT_AdditionalDataCheck':
+                    params.insert(0, self.param_quote(self.action['InputType']))
+
+                code += CondType + '(' + ', '.join(params) + ')'
+
+            if is_root and self.FailOnFirst:
+                code = 'actionPassed && ' + code
+
+            self.add_branch(code, PassCommands, FailCommands, name=Name)
+
+        else:
+            # Unexpected?
+            self.add_commands_code(PassCommands)
+
+    def add_commands_code(self, commands):
+        first = True
+        needNewline = False
+        for commandOrCondition in commands:
+            # print(commandOrCondition)
+            condition = commandOrCondition.get('Condition')
+            if condition is None and 'Checks' in commandOrCondition:
+                condition = commandOrCondition  # v1
+            if condition is not None:
+                if not first:
+                    self.add_line()
+                first = False
+                needNewline = True
+
+                self.add_condition_code(condition)
+                continue
+
+            if needNewline:
+                self.add_line()
+            first = False
+            needNewline = False
+
+            command = commandOrCondition.get('Command', commandOrCondition)
+            CmdType = command.get('cmdtype')  # v1
+            if CmdType is None:
+                CmdType = command['CmdType']
+            CommandText = command.get('CommandText')
+            Part2 = command.get('CommandPart2', command.get('Part2'))
+            Part3 = command.get('CommandPart3', command.get('Part3'))
+            Part4 = command.get('CommandPart4', command.get('Part4'))
+            CustomChoices = command.get('CustomChoices', [])
+
+            code = CmdType + '('
+
+            params = []
+            if CommandText is not None:
+                params.append(self.param_quote(CommandText))
+            if Part2 is not None:
+                params.append(self.param_quote(Part2))
+            if Part3 is not None:
+                params.append(self.param_quote(Part3))
+            if Part4 is not None:
+                params.append(self.param_quote(Part4))
+            if len(CustomChoices) > 0:
+                # Only used with CT_SETVARIABLE_NUMERIC_BYINPUT and CT_SETVARIABLEBYINPUT
+                choices = []
+                for choice in CustomChoices:
+                    if isinstance(choice, dict):
+                        choices.append(self.param_quote(choice['CustomChoice']['Name']))
+                    else:
+                        # Old RAGS version
+                        choices.append(self.param_quote(choice))
+                params.append('[' + ', '.join(choices) + ']')
+
+            code += ', '.join(params) + ');'
+
+            self.add_line(code)
+
+            # Add a new line after interaction commands
+            if CmdType in ActionCode.INTERACTIVE_CMDS:
+                needNewline = True
 
 def js_str(val):
     return json.dumps(re.sub(r'\r?\n\r?', '<br>', str(val)))
@@ -1230,6 +1446,60 @@ async def process_file(fpath, keys, args, progress=None):
                                 print_err('WARNING: unexpected game object "%s" (%s)' % (k, v))
                             with open(os.path.join(data_dir, k + '.json'), 'wt') as out:
                                 out.write(json.dumps(v, default=json_encode, sort_keys=True, indent=2))
+
+                            if isinstance(v, list) and len(v) > 0:
+                                entry = v[0]
+                                has_actions = isinstance(entry, dict) and 'Actions' in entry
+                            else:
+                                # ThePlayer
+                                has_actions = isinstance(v, dict) and 'Actions' in v
+
+                            if has_actions:
+                                out_path = os.path.join(data_dir, k + '-code.js')
+                                with open(out_path, 'wt') as out:
+                                    # Creating JS files instead of JSON so we can load them from file:// URLs
+                                    out.write('rags.tables.%s = ' % (k,));
+
+                                    actionCodes = {}
+                                    data_code = deepcopy(v)
+
+                                    def process_action(action, indent):
+                                        action_data = action
+                                        code = ActionCode(action_data, indent)
+                                        if len(code.text) > 0:
+                                            actionCodes[code.id] = code
+                                            action['execute'] = '__ACTION_CODE_%d__' % (code.id)
+
+                                        # Remove properties that have been converted to code
+                                        if 'Conditions' in action_data:
+                                            del action_data['Conditions']
+                                        if 'PassCommands' in action_data:
+                                            del action_data['PassCommands']
+                                        if 'FailCommands' in action_data:
+                                            del action_data['FailCommands']
+
+                                    if isinstance(v, dict):
+                                        for action in data_code['Actions']:
+                                            process_action(action, '        ')
+                                        # FIXME Also do StartingRoom.Actions
+                                    else:
+                                        for entry in data_code:
+                                            for action in entry['Actions']:
+                                                process_action(action, '          ')
+
+                                    content = json.dumps(data_code, default=json_encode, sort_keys=True, indent=2)
+
+                                    def repl_execute(m):
+                                        indent = m.group(1)
+                                        prefix = m.group(2)
+                                        id = int(m.group(3))
+                                        return (indent + prefix + 'function() {\n'
+                                                + actionCodes[id].text + '\n'
+                                                + indent + '}')
+
+                                    content = re.sub(r'( +)("execute":\s*)"__ACTION_CODE_(\d+)__"', repl_execute, content)
+                                    out.write(content)
+
                         else:
                             if k not in game_fields:  # DEBUG
                                 print_err('WARNING: unexpected game property "%s" (%s)' % (k, v))
@@ -1772,207 +2042,6 @@ async def process_file(fpath, keys, args, progress=None):
                                 data[row_key] = row
 
                         if args.data_debug:
-                            from copy import deepcopy
-
-                            class ActionCode:
-                                '''
-                                A class used to convert action logic into JS-like code.
-                                '''
-                                NEXT_ID = 0
-                                INTERACTIVE_CMDS = set([
-                                    'CT_PAUSEGAME', 
-                                    'CT_SETVARIABLE_NUMERIC_BYINPUT', 
-                                    'CT_SETVARIABLEBYINPUT'
-                                ])
-
-                                def __init__(self, action, indent=''):
-                                    self.action = action
-                                    self.indent = indent
-
-                                    self.FailOnFirst = action.get('FailOnFirst', 'False') == 'True'
-
-                                    self.text = ''
-
-                                    self.id = ActionCode.NEXT_ID
-                                    ActionCode.NEXT_ID += 1
-
-                                    self.generate()
-
-                                def incr_indent(self):
-                                    self.indent += '  '
-
-                                def decr_indent(self):
-                                    self.indent = self.indent[:-2]
-
-                                def add_line(self, line=''):
-                                    if len(line) > 0:
-                                        self.text += self.indent + line + '\n'
-                                    else:
-                                        self.text += '\n'
-
-                                @staticmethod
-                                def param_quote(value):
-                                    def repl(m):
-                                        c = m.group(1)
-                                        if c == '\n':
-                                            return r'\n'
-                                        elif c == "'":
-                                            return r"\'"
-                                        elif c == '\t':
-                                            return r'\t'
-                                        elif c == '\r':
-                                            return r'\r'
-
-                                    return ("'" + re.sub(r"(\n|\r|\t|')", repl, value) + "'")
-
-                                def generate(self):
-                                    self.text = ''
-
-                                    Conditions = self.action.get('Conditions', [])
-                                    PassCommands = self.action.get('PassCommands', [])
-                                    FailCommands = self.action.get('FailCommands', [])
-
-                                    if len(Conditions) > 0:
-                                        self.add_line('let actionPassed = %s;' % ('true' if self.FailOnFirst else 'false'))
-                                        self.add_line()
-
-                                        for condition in Conditions:
-                                            self.add_condition_code(condition['Condition'], True)
-
-                                        self.add_line()
-
-                                        self.add_branch('actionPassed', PassCommands, FailCommands, True)
-
-                                    elif len(PassCommands) > 0:
-                                        self.add_commands_code(PassCommands)
-
-                                    self.text = self.text.rstrip()
-
-                                def add_branch(self, testExpr, PassCommands, FailCommands, is_root=False, name=''):
-                                    # Always show the check if this is not "actionPassed" in case it has side effects
-                                    if len(PassCommands) > 0 or len(FailCommands) > 0 or testExpr != 'actionPassed':
-                                        if len(name) > 0:
-                                            self.add_line('// ' + re.sub(r'[\r\n]', ' ', name))
-
-                                        self.add_line('if(' + testExpr + ') {')
-                                        self.incr_indent()
-                                        self.add_commands_code(PassCommands)
-
-                                        if is_root and not self.FailOnFirst:
-                                            if len(PassCommands) > 0:
-                                                self.add_line()
-                                            self.add_line('actionPassed = true;')
-
-                                        self.decr_indent()
-
-                                        if len(FailCommands) > 0 or (is_root and self.FailOnFirst):
-                                            self.add_line('} else {')
-                                            self.incr_indent()
-                                            self.add_commands_code(FailCommands)
-
-                                            if is_root and self.FailOnFirst:
-                                                if len(FailCommands) > 0:
-                                                    self.add_line()
-                                                self.add_line('actionPassed = false;')
-
-                                            self.decr_indent()
-
-                                        self.add_line('}')
-
-                                def add_condition_code(self, condition, is_root=False):
-                                    Checks = condition.get('Checks', [])
-                                    PassCommands = condition.get('PassCommands', [])
-                                    FailCommands = condition.get('FailCommands', [])
-                                    Name = condition.get('Name', '')
-
-                                    if len(Checks) > 0:
-                                        code = ''
-
-                                        for check in Checks:
-                                            check = check['Check']
-                                            CondType = check['CondType']
-                                            Step2 = check.get('Step2')
-                                            Step3 = check.get('Step3')
-                                            Step4 = check.get('Step4')
-
-                                            if len(code) != 0:
-                                                code += ' || ' if check['CkType'] == 'Or' else ' && '
-
-                                            params = []
-                                            if Step2 is not None:
-                                                params.append(self.param_quote(Step2))
-                                            if Step3 is not None:
-                                                params.append(self.param_quote(Step3))
-                                            if Step4 is not None:
-                                                params.append(self.param_quote(Step4))
-
-                                            if CondType == 'CT_AdditionalDataCheck':
-                                                params.insert(0, self.param_quote(self.action['InputType']))
-
-                                            code += CondType + '(' + ', '.join(params) + ')'
-
-                                        if is_root and self.FailOnFirst:
-                                            code = 'actionPassed && ' + code
-
-                                        self.add_branch(code, PassCommands, FailCommands, name=Name)
-
-                                    else:
-                                        # Unexpected?
-                                        self.add_commands_code(PassCommands)
-
-                                def add_commands_code(self, commands):
-                                    first = True
-                                    needNewline = False
-                                    for commandOrCondition in commands:
-                                        condition = commandOrCondition.get('Condition')
-                                        if condition is not None:
-                                            if not first:
-                                                self.add_line()
-                                            first = False
-                                            needNewline = True
-
-                                            self.add_condition_code(condition)
-                                            continue
-
-                                        if needNewline:
-                                            self.add_line()
-                                        first = False
-                                        needNewline = False
-
-                                        command = commandOrCondition.get('Command')
-                                        CmdType = command['CmdType']
-                                        CommandText = command.get('CommandText')
-                                        Part2 = command.get('Part2')
-                                        Part3 = command.get('Part3')
-                                        Part4 = command.get('Part4')
-                                        CustomChoices = command.get('CustomChoices', [])
-
-                                        code = CmdType + '('
-
-                                        params = []
-                                        if CommandText is not None:
-                                            params.append(self.param_quote(CommandText))
-                                        if Part2 is not None:
-                                            params.append(self.param_quote(Part2))
-                                        if Part3 is not None:
-                                            params.append(self.param_quote(Part3))
-                                        if Part4 is not None:
-                                            params.append(self.param_quote(Part4))
-                                        if len(CustomChoices) > 0:
-                                            # Only used with CT_SETVARIABLE_NUMERIC_BYINPUT and CT_SETVARIABLEBYINPUT
-                                            choices = []
-                                            for choice in CustomChoices:
-                                                choices.append(self.param_quote(choice['CustomChoice']['Name']))
-                                            params.append('[' + ', '.join(choices) + ']')
-
-                                        code += ', '.join(params) + ');'
-
-                                        self.add_line(code)
-
-                                        # Add a new line after interaction commands
-                                        if CmdType in ActionCode.INTERACTIVE_CMDS:
-                                            needNewline = True
-
                             out_path = os.path.join(data_dir, table.name + '.js')
                             with open(out_path, 'wt') as out:
                                 # Creating JS files instead of JSON so we can load them from file:// URLs
