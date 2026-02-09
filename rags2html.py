@@ -328,6 +328,14 @@ class ActionCode:
             elif c == '\r':
                 return r'\r'
 
+        # Replace special GUID with their name
+        if value == '00000000-0000-0000-0000-000000000001':
+            return 'CURRENT_ROOM'
+        elif value == '00000000-0000-0000-0000-000000000002':
+            return 'VOID_ROOM'
+        elif value == '00000000-0000-0000-0000-000000000004':
+            return 'SELF_OBJECT'
+
         return ("'" + re.sub(r"(\n|\r|\t|')", repl, str(value)) + "'")
 
     def generate(self):
