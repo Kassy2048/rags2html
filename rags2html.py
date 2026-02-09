@@ -1302,6 +1302,10 @@ PROPERTIES_KEYS = {
 }
 
 async def process_file(fpath, keys, args, progress=None):
+        if args.out_dir is not None:
+            dir_name = os.path.splitext(os.path.basename(fpath))[0]
+            out_dir = os.path.join(args.out_dir, dir_name)
+        else:
         out_dir = os.path.splitext(fpath)[0]
         media_dir = os.path.join(out_dir, 'images')
         if args.data_debug:
@@ -2258,6 +2262,7 @@ async def main(argv, progress=None):
     parser.add_argument('--info', action='store_true', help='only show game info')
     parser.add_argument('--decrypt-only', action='store_true', help='only decrypt the game file (for debugging)')
     parser.add_argument('--rags-compat', action='store_true', help='produce JS code as close as what RAGS produces')
+    parser.add_argument('-o', '--out-dir', help='base output directory (default: game file folder)')
 
     args = parser.parse_args(args=argv[1:])
 
