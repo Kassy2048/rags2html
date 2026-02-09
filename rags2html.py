@@ -424,7 +424,7 @@ class ActionCode:
             if is_root and self.FailOnFirst:
                 code = 'actionPassed && ' + code
 
-            self.add_branch(code, PassCommands, FailCommands, name=Name)
+            self.add_branch(code, PassCommands, FailCommands, is_root, name=Name)
 
         else:
             # Unexpected?
@@ -1306,7 +1306,7 @@ async def process_file(fpath, keys, args, progress=None):
             dir_name = os.path.splitext(os.path.basename(fpath))[0]
             out_dir = os.path.join(args.out_dir, dir_name)
         else:
-        out_dir = os.path.splitext(fpath)[0]
+            out_dir = os.path.splitext(fpath)[0]
         media_dir = os.path.join(out_dir, 'images')
         if args.data_debug:
             data_dir = os.path.join(out_dir, 'data')
@@ -1750,6 +1750,7 @@ async def process_file(fpath, keys, args, progress=None):
                 timers = []  # TimerList
                 timers_fields = set(('Actions', 'Active', 'CustomProperties', 'Length',
                         'LiveTimer', 'Name', 'Restart', 'TimerSeconds', 'TType', 'TurnNumber'))
+                # The order of timers is important, do not change it!
                 for entry in game['TimerList']:
                     for k in entry.keys():  # DEBUG
                         if k not in timers_fields:
@@ -2193,6 +2194,7 @@ async def process_file(fpath, keys, args, progress=None):
                 character['Properties'] = list(characterProperties.get(name, {}).values())
                 character['Actions'] = list(characterActions.get(name, {}).values())
 
+            # The order of timers is important, do not change it!
             for timer in timers:
                 name = timer['Name']
                 timer['Properties'] = list(timerProperties.get(name, {}).values())
