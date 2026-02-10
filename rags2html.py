@@ -17,6 +17,7 @@ from enum import Enum
 from types import DynamicClassAttribute
 import asyncio  # Using asyncio for web version
 from copy import deepcopy
+import functools
 
 import sdf
 from compat import Color, TextFont
@@ -288,15 +289,17 @@ class ActionCode:
         'CT_SETVARIABLEBYINPUT'
     ])
 
-    def __init__(self, action, indent=''):
+    def __init__(self, action, indent='', guids=None):
         self.action = action
         self.indent = indent
+        self.guids = guids
 
         self.FailOnFirst = action.get('bConditionFailOnFirst', None)  # v1
         if self.FailOnFirst is None:
             self.FailOnFirst = action.get('FailOnFirst', 'False') == 'True'
 
         self.text = ''
+        self.param_names = []
 
         self.id = ActionCode.NEXT_ID
         ActionCode.NEXT_ID += 1
@@ -315,8 +318,7 @@ class ActionCode:
         else:
             self.text += '\n'
 
-    @staticmethod
-    def param_quote(value):
+    def param_quote(self, value):
         def repl(m):
             c = m.group(1)
             if c == '\n':
@@ -335,6 +337,11 @@ class ActionCode:
             return 'VOID_ROOM'
         elif value == '00000000-0000-0000-0000-000000000004':
             return 'SELF_OBJECT'
+
+        if self.guids is not None:
+            name = self.guids.get(value)
+            if name is not None:
+                self.param_names.append(name)
 
         return ("'" + re.sub(r"(\n|\r|\t|')", repl, str(value)) + "'")
 
@@ -368,6 +375,10 @@ class ActionCode:
         if len(PassCommands) > 0 or len(FailCommands) > 0 or testExpr != 'actionPassed':
             if len(name) > 0:
                 self.add_line('// ' + re.sub(r'[\r\n]', ' ', name))
+
+            if len(self.param_names) > 0:
+                # Add a comment about the GUIDs used
+                self.add_line('// ' + ', '.join(self.param_names))
 
             self.add_line('if(' + testExpr + ') {')
             self.incr_indent()
@@ -403,6 +414,7 @@ class ActionCode:
         if len(Checks) > 0:
             code = ''
 
+            self.param_names = []
             for check in Checks:
                 check = check.get('Check', check)
                 CondType = check['CondType']
@@ -472,6 +484,7 @@ class ActionCode:
 
             code = CmdType + '('
 
+            self.param_names = []
             params = []
             if CommandText is not None:
                 params.append(self.param_quote(CommandText))
@@ -494,6 +507,9 @@ class ActionCode:
 
             code += ', '.join(params) + ');'
 
+            if len(self.param_names) > 0:
+                # Add a comment about the GUIDs used
+                self.add_line('// ' + ', '.join(self.param_names))
             self.add_line(code)
 
             # Add a new line after interaction commands
@@ -1452,6 +1468,9 @@ async def process_file(fpath, keys, args, progress=None):
                 # Extract raw JSON files from the game for debug
                 if args.data_debug:
                     game_data = {}
+                    actions_tables = {}
+                    guids = {}
+                    guidTables = set(['ObjectList', 'RoomList'])
                     for k, v in game.items():
                         if isinstance(v, (list, dict)) and k != 'GameFont' and not re.search(r'[/\\:]', k):
                             if k not in game_tables:  # DEBUG
@@ -1467,50 +1486,28 @@ async def process_file(fpath, keys, args, progress=None):
                                 has_actions = isinstance(v, dict) and 'Actions' in v
 
                             if has_actions:
-                                out_path = os.path.join(data_dir, k + '-code.js')
-                                with open(out_path, 'wt') as out:
-                                    # Creating JS files instead of JSON so we can load them from file:// URLs
-                                    out.write('rags.tables.%s = ' % (k,));
+                                actions_tables[k] = deepcopy(v)
 
-                                    actionCodes = {}
-                                    data_code = deepcopy(v)
+                            if k in guidTables:
+                                # Collect the GUIDs
+                                for entry in v:
+                                    name = entry.get('name')
+                                    if name is None:
+                                        name = entry.get('Name')
+                                    # Remove the "List" suffix
+                                    name = k[:-4] + ':"' + name + '"'
 
-                                    def process_action(action, indent):
-                                        action_data = action
-                                        code = ActionCode(action_data, indent)
-                                        if len(code.text) > 0:
-                                            actionCodes[code.id] = code
-                                            action['execute'] = '__ACTION_CODE_%d__' % (code.id)
+                                    guid = entry.get('UniqueIdentifier')
+                                    if guid is None:
+                                        guid = entry.get('UniqueID')
 
-                                        # Remove properties that have been converted to code
-                                        if 'Conditions' in action_data:
-                                            del action_data['Conditions']
-                                        if 'PassCommands' in action_data:
-                                            del action_data['PassCommands']
-                                        if 'FailCommands' in action_data:
-                                            del action_data['FailCommands']
+                                    other = guids.get(guid)
+                                    if other is not None:
+                                        print('Warning: GUID %s appears multiple times (%s and %s)'
+                                                % (guid, other, name))
+                                        continue
 
-                                    if isinstance(v, dict):
-                                        for action in data_code['Actions']:
-                                            process_action(action, '        ')
-                                        # FIXME Also do StartingRoom.Actions
-                                    else:
-                                        for entry in data_code:
-                                            for action in entry['Actions']:
-                                                process_action(action, '          ')
-
-                                    content = json.dumps(data_code, default=json_encode, sort_keys=True, indent=2)
-
-                                    def repl_execute(m):
-                                        indent = m.group(1)
-                                        prefix = m.group(2)
-                                        id = int(m.group(3))
-                                        return (indent + prefix + 'function() {\n'
-                                                + actionCodes[id].text + '\n'
-                                                + indent + '}')
-
-                                    content = re.sub(r'( +)("execute":\s*)"__ACTION_CODE_(\d+)__"', repl_execute, content)
-                                    out.write(content)
+                                    guids[guid] = name
 
                         else:
                             if k not in game_fields:  # DEBUG
@@ -1519,6 +1516,51 @@ async def process_file(fpath, keys, args, progress=None):
 
                     with open(os.path.join(data_dir, 'Game.json'), 'wt') as out:
                         out.write(json.dumps(game_data, default=json_encode, sort_keys=True, indent=2))
+
+                    for k, data_code in actions_tables.items():
+                        out_path = os.path.join(data_dir, k + '-code.js')
+                        with open(out_path, 'wt') as out:
+                            # Creating JS files instead of JSON so we can load them from file:// URLs
+                            out.write('rags.tables.%s = ' % (k,));
+
+                            actionCodes = {}
+
+                            def process_action(action, indent):
+                                action_data = action
+                                code = ActionCode(action_data, indent, guids)
+                                if len(code.text) > 0:
+                                    actionCodes[code.id] = code
+                                    action['execute'] = '__ACTION_CODE_%d__' % (code.id)
+
+                                # Remove properties that have been converted to code
+                                if 'Conditions' in action_data:
+                                    del action_data['Conditions']
+                                if 'PassCommands' in action_data:
+                                    del action_data['PassCommands']
+                                if 'FailCommands' in action_data:
+                                    del action_data['FailCommands']
+
+                            if isinstance(data_code, dict):
+                                for action in data_code['Actions']:
+                                    process_action(action, '        ')
+                                # FIXME Also do StartingRoom.Actions
+                            else:
+                                for entry in data_code:
+                                    for action in entry['Actions']:
+                                        process_action(action, '          ')
+
+                            content = json.dumps(data_code, default=json_encode, sort_keys=True, indent=2)
+
+                            def repl_execute(m):
+                                indent = m.group(1)
+                                prefix = m.group(2)
+                                id = int(m.group(3))
+                                return (indent + prefix + 'function() {\n'
+                                        + actionCodes[id].text + '\n'
+                                        + indent + '}')
+
+                            content = re.sub(r'( +)("execute":\s*)"__ACTION_CODE_(\d+)__"', repl_execute, content)
+                            out.write(content)
 
                 # Convert "game" into arguments for create_game_js()
 
@@ -1899,6 +1941,8 @@ async def process_file(fpath, keys, args, progress=None):
                     playerActions = None
                     playerProperties = None
 
+                    dbg_tables = []
+
                     for table_num, table in enumerate(db.tables.values()):
                         skip_media = args.skip_media and table.name == 'Media'
 
@@ -2055,56 +2099,7 @@ async def process_file(fpath, keys, args, progress=None):
                                 data[row_key] = row
 
                         if args.data_debug:
-                            out_path = os.path.join(data_dir, table.name + '.js')
-                            with open(out_path, 'wt') as out:
-                                # Creating JS files instead of JSON so we can load them from file:// URLs
-                                out.write('rags.tables.%s = ' % (table.name,));
-                                out.write(json.dumps(data, default=json_encode, sort_keys=True, indent=2))
-
-                            if(table.name.endswith('Actions')):
-                                out_path = os.path.join(data_dir, table.name + '-code.js')
-                                with open(out_path, 'wt') as out:
-                                    # Creating JS files instead of JSON so we can load them from file:// URLs
-                                    out.write('rags.tables.%s = ' % (table.name,));
-
-                                    actionCodes = {}
-                                    data_code = deepcopy(data)
-
-                                    def process_action(action, indent):
-                                        action_data = action['Data']
-                                        code = ActionCode(action_data, indent)
-                                        if len(code.text) > 0:
-                                            actionCodes[code.id] = code
-                                            action['execute'] = '__ACTION_CODE_%d__' % (code.id)
-
-                                        # Remove properties that have been converted to code
-                                        if 'Conditions' in action_data:
-                                            del action_data['Conditions']
-                                        if 'PassCommands' in action_data:
-                                            del action_data['PassCommands']
-                                        if 'FailCommands' in action_data:
-                                            del action_data['FailCommands']
-
-                                    if(table.name == 'PlayerActions'):
-                                        for action in data_code.values():
-                                            process_action(action, '      ')
-                                    else:
-                                        for entry in data_code.values():
-                                            for action in entry.values():
-                                                process_action(action, '        ')
-
-                                    content = json.dumps(data_code, default=json_encode, sort_keys=True, indent=2)
-
-                                    def repl_execute(m):
-                                        indent = m.group(1)
-                                        prefix = m.group(2)
-                                        id = int(m.group(3))
-                                        return (indent + prefix + 'function() {\n'
-                                                + actionCodes[id].text + '\n'
-                                                + indent + '}')
-
-                                    content = re.sub(r'( +)("execute":\s*)"__ACTION_CODE_(\d+)__"', repl_execute, content)
-                                    out.write(content)
+                            dbg_tables.append((table, data))
 
                         if table.name == 'GameData':
                             game = rows[0]
@@ -2157,6 +2152,90 @@ async def process_file(fpath, keys, args, progress=None):
                         elif table.name == 'PlayerActions':
                             playerActions = data
 
+                    if args.data_debug:
+                        def table_cmp(a, b):
+                            nameA = a[0].name
+                            nameB = b[0].name
+                            actionA = nameA.endswith('Actions')
+                            actionB = nameB.endswith('Actions')
+                            if actionA != actionB:
+                                return 1 if actionA else -1
+                            if nameA == nameB:
+                                return 0
+                            return 1 if nameA > nameB else -1
+
+                        # Move actions tables at the end of the list so we can collect the GUIDs
+                        dbg_tables.sort(key=functools.cmp_to_key(table_cmp))
+
+                        guids = {}
+                        guidTables = set(['Items', 'Rooms'])
+                        for (table, data) in dbg_tables:
+                            out_path = os.path.join(data_dir, table.name + '.js')
+                            with open(out_path, 'wt') as out:
+                                # Creating JS files instead of JSON so we can load them from file:// URLs
+                                out.write('rags.tables.%s = ' % (table.name,));
+                                out.write(json.dumps(data, default=json_encode, sort_keys=True, indent=2))
+
+                            if(table.name.endswith('Actions')):
+                                out_path = os.path.join(data_dir, table.name + '-code.js')
+                                with open(out_path, 'wt') as out:
+                                    # Creating JS files instead of JSON so we can load them from file:// URLs
+                                    out.write('rags.tables.%s = ' % (table.name,));
+
+                                    actionCodes = {}
+                                    data_code = deepcopy(data)
+
+                                    def process_action(action, indent):
+                                        action_data = action['Data']
+                                        code = ActionCode(action_data, indent, guids)
+                                        if len(code.text) > 0:
+                                            actionCodes[code.id] = code
+                                            action['execute'] = '__ACTION_CODE_%d__' % (code.id)
+
+                                        # Remove properties that have been converted to code
+                                        if 'Conditions' in action_data:
+                                            del action_data['Conditions']
+                                        if 'PassCommands' in action_data:
+                                            del action_data['PassCommands']
+                                        if 'FailCommands' in action_data:
+                                            del action_data['FailCommands']
+
+                                    if(table.name == 'PlayerActions'):
+                                        for action in data_code.values():
+                                            process_action(action, '      ')
+                                    else:
+                                        for entry in data_code.values():
+                                            for action in entry.values():
+                                                process_action(action, '        ')
+
+                                    content = json.dumps(data_code, default=json_encode, sort_keys=True, indent=2)
+
+                                    def repl_execute(m):
+                                        indent = m.group(1)
+                                        prefix = m.group(2)
+                                        id = int(m.group(3))
+                                        return (indent + prefix + 'function() {\n'
+                                                + actionCodes[id].text + '\n'
+                                                + indent + '}')
+
+                                    content = re.sub(r'( +)("execute":\s*)"__ACTION_CODE_(\d+)__"', repl_execute, content)
+                                    out.write(content)
+
+                            elif table.name in guidTables:
+                                # Collect the GUIDs
+                                for (guid, entry) in data.items():
+                                    name = entry.get('name')
+                                    if name is None:
+                                        name = entry.get('Name')
+                                    name = table.name[:-1] + ':"' + name + '"'
+
+                                    other = guids.get(guid)
+                                    if other is not None:
+                                        print('Warning: GUID %s appears multiple times (%s and %s)'
+                                                % (guid, other, name))
+                                        continue
+
+                                    guids[guid] = name
 
                 print('COVER: ' + db.pageCoverStats())
                 await asyncio.sleep(0)
