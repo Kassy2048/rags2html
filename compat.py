@@ -176,6 +176,8 @@ class Color:
 
         if text.startswith('Color ['):
             text = text[7:-1]
+        if text.startswith('#'):
+            text = text[1:-1]
         text = text.strip()
 
         argb = Color.KNOWN_COLORS.get(text)
