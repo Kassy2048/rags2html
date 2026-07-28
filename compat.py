@@ -182,19 +182,21 @@ class Color:
             text = text[1:]
             match len(text):
                 case 3:
-                    # rgb, set alpha to FF and return as aarrggbb
-                    return signed(int("FF"+text[0:1]+text[0:1]+text[1:2]+text[1:2]+text[2:3]+text[2:3], 16))
+                    # rgb, set alpha to FF and convert as aarrggbb
+                    text = "FF" + text[0] * 2 + text[1] * 2 + text[2] * 2
                 case 4:
-                    # argb, return as aarrggbb
-                    return signed(int(text[0:1]+text[0:1]+text[1:2]+text[1:2]+text[2:3]+text[2:3]+text[3:4]+text[3:4], 16))
+                    # argb, convert as aarrggbb
+                    text = text[0] * 2 + text[1] * 2 + text[2] * 2 + text[3] * 2
                 case 6:
                     # rrggbb, set alpha to FF
-                    return signed(int("FF"+text, 16))
+                    text = "FF" + text
                 case 8:
                     # aarrggbb
-                    return signed(int(text, 16))
+                    pass
                 case _:
                     raise RuntimeError('Invalid hex color code "%s"' % (_text,))
+
+            return signed(int(text, 16))
 
         argb = Color.KNOWN_COLORS.get(text)
         if argb is not None:
