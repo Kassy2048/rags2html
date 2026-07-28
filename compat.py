@@ -178,23 +178,24 @@ class Color:
 
         if text.startswith('Color ['):
             text = text[7:-1]
+
         if text.startswith('#'):
             text = text[1:]
-            match len(text):
-                case 3:
-                    # rgb, set alpha to FF and convert as aarrggbb
-                    text = "FF" + text[0] * 2 + text[1] * 2 + text[2] * 2
-                case 4:
-                    # argb, convert as aarrggbb
-                    text = text[0] * 2 + text[1] * 2 + text[2] * 2 + text[3] * 2
-                case 6:
-                    # rrggbb, set alpha to FF
-                    text = "FF" + text
-                case 8:
-                    # aarrggbb
-                    pass
-                case _:
-                    raise RuntimeError('Invalid hex color code "%s"' % (_text,))
+            size = len(text)
+            if size == 3:
+                # rgb, set alpha to FF and convert as aarrggbb
+                text = "FF" + text[0] * 2 + text[1] * 2 + text[2] * 2
+            elif size == 4:
+                # argb, convert as aarrggbb
+                text = text[0] * 2 + text[1] * 2 + text[2] * 2 + text[3] * 2
+            elif size == 6:
+                # rrggbb, set alpha to FF
+                text = "FF" + text
+            elif size == 8:
+                # aarrggbb
+                pass
+            else:
+                raise RuntimeError('Invalid hex color code "%s"' % (_text,))
 
             return signed(int(text, 16))
 
