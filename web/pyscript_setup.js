@@ -2,7 +2,7 @@
 
 (function() {
     /* Root URL that contains the PyScript scripts */
-    const PYSCRIPT_ROOT = 'https://pyscript.net/releases/2024.11.1/';
+    const PYSCRIPT_ROOT = 'https://pyscript.net/releases/2026.7.3/';
     /* URL to the interpreter to use (leave empty to use the default) */
     const INTERPRETER = '';
 
