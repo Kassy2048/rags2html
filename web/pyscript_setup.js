@@ -16,6 +16,19 @@
         }
     }
 
+    function showError(msg) {
+        const errorList = document.getElementById('error-list');
+        errorList.textContent += msg + '\n\n';
+        errorList.classList.add('show');
+    }
+
+    window.addEventListener('error', (e) => {
+        showError(e.message + '\n(in ' + e.filename + ':' + e.lineno + ':' + e.colno + ')');
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+        showError(e.reason);
+    });
+
     const thisScript = document.head.querySelector('script[src$="pyscript_setup.js"]');
 
     /* Add the CSS file */

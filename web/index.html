@@ -152,6 +152,25 @@ body {
   100% { color: pink; }
 }
 
+#error-list {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    display: none;
+    padding: 5px 10px;
+    justify-content: center;
+    font-family: monospace;
+    font-size: x-large;
+    font-weight: bold;
+    color: red;
+}
+
+#error-list.show {
+    display: flex;
+}
+
     </style>
   </head>
   <body>
@@ -198,6 +217,7 @@ Using Regalia: <a href="https://github.com/selectivepaperclip/regalia">https://g
     </div>
 
   <div id="load-screen">Loading, please wait...</div>
+  <div id="error-list"></div>
 
   </body>
 </html>
